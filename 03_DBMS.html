@@ -259,7 +259,174 @@ dbExecute(conn,
 dbListTables(conn)</code></pre>
 <pre><code>## [1] &quot;Course&quot;  &quot;Grade&quot;   &quot;Student&quot;</code></pre>
 </div>
+<div id="inserting-tuplesrows" class="section level3">
+<h3>Inserting Tuples/Rows</h3>
+<p>Below we insert the year 1 student “Harper Taylor” with student ID 202029744 to Student by using the function <code>dbAppendTable()</code>:</p>
+<pre class="r"><code># insert tuples/rows using dbAppendTable() function
+dbAppendTable(conn, &quot;Student&quot;, data.frame(student_id = &quot;202029744&quot;,
+                                          name = &quot;Harper Taylor&quot;,
+                                          year = 1))</code></pre>
+<p>Alternatively, we can use <code>dbExecute()</code> function:</p>
+<pre class="r"><code># insert tuples/rows using dbExecute() function
+dbExecute(conn,
+          &quot;INSERT INTO Student VALUES(19890604, &#39;Never Forget&#39;, 1)&quot;)</code></pre>
+<p>When we browse the table, we can see the new row has been added.</p>
+<pre class="r"><code># browse the table
+dbReadTable(conn, &quot;Student&quot;)</code></pre>
+<pre><code>##   student_id           name year
+## 1  201921323      Ava Smith    2
+## 2  201832220    Ben Johnson    3
+## 3  202003219  Charlie Jones    1
+## 4  202045234     Dan Norris    1
+## 5  201985603     Emily Wood    1
+## 6  201933222 Freddie Harris    2
+## 7  201875940   Grace Clarke    2
+## 8  202029744  Harper Taylor    1
+## 9   19890604   Never Forget    1</code></pre>
 </div>
+<div id="updating-tuplesrows" class="section level3">
+<h3>Updating Tuples/Rows</h3>
+<p>Below, we update the student ID of student Harper Taylor to 201929744 by <code>dbExecute()</code>. There is no specific function for updating a row in <code>DBI</code>.</p>
+<pre class="r"><code># update tuples/rows
+dbExecute(conn, &quot;Update Student SET student_id = &#39;201929744&#39;
+                                WHERE name = &#39;Harper Taylor&#39;&quot;)</code></pre>
+<p>When we browse the table, we can see the new row has been added.</p>
+<pre class="r"><code># browse the table
+dbReadTable(conn, &quot;Student&quot;)</code></pre>
+<pre><code>##   student_id           name year
+## 1  201921323      Ava Smith    2
+## 2  201832220    Ben Johnson    3
+## 3  202003219  Charlie Jones    1
+## 4  202045234     Dan Norris    1
+## 5  201985603     Emily Wood    1
+## 6  201933222 Freddie Harris    2
+## 7  201875940   Grace Clarke    2
+## 8  201929744  Harper Taylor    1
+## 9   19890604   Never Forget    1</code></pre>
+</div>
+<div id="deleting-tuplesrows" class="section level3">
+<h3>Deleting Tuples/Rows</h3>
+<p>Below, we delete the record for the student Harper Taylor and Never Forget from table <code>Student</code> using <code>dbExecute()</code>. There is no specific function for deleting a row in <code>DBI</code>.</p>
+<pre class="r"><code>dbExecute(conn,
+          &quot;DELETE FROM Student WHERE name = &#39;Harper Taylor&#39; OR name = &#39;Never Forget&#39;&quot;)</code></pre>
+<pre><code>## [1] 2</code></pre>
+<p>When we browse the table, we can see the rows have been removed.</p>
+<pre class="r"><code># browse the table
+dbReadTable(conn, &quot;Student&quot;)</code></pre>
+<pre><code>##   student_id           name year
+## 1  201921323      Ava Smith    2
+## 2  201832220    Ben Johnson    3
+## 3  202003219  Charlie Jones    1
+## 4  202045234     Dan Norris    1
+## 5  201985603     Emily Wood    1
+## 6  201933222 Freddie Harris    2
+## 7  201875940   Grace Clarke    2</code></pre>
+</div>
+</div>
+<div id="disconnecting-from-the-database" class="section level2">
+<h2>Disconnecting From the Database</h2>
+<p>After we finish manipulating the database, we can close the connection using the function <code>dbDisconnect()</code> from <code>DBI</code>:</p>
+<pre class="r"><code># disconnecting from the database
+dbDisconnect(conn)</code></pre>
+</div>
+<div id="querying-databases-using-dbi" class="section level2">
+<h2>Querying Databases Using <code>DBI</code></h2>
+<p>We have just disconnected from the database. We need to reconnect to the database by the following codes in order to perform querying databases.</p>
+<pre class="r"><code># re-connect to the database
+conn &lt;- dbConnect(RSQLite::SQLite(), &quot;university.db&quot;)
+dbListTables(conn)</code></pre>
+<pre><code>## [1] &quot;Course&quot;  &quot;Grade&quot;   &quot;Student&quot;</code></pre>
+<p>Once we formulate the query into an <code>SQL SELECT</code> statement, we can get the query result in <code>R</code> using the function <code>dbGetQuery()</code> or <code>dbSendQuery()</code> from <code>DBI</code>. The following examples show how we can run queries from within <code>R</code>.</p>
+<div id="getting-grades-of-a-course-with-course_id-st101" class="section level3">
+<h3>Getting Grades of a Course With <code>course_id</code> “ST101”</h3>
+<pre class="r"><code># getting grades of a course using dbGetQuery()
+q1 &lt;- dbGetQuery(conn, &quot;SELECT final_mark
+                        FROM Grade
+                        WHERE course_id = &#39;ST101&#39;&quot;)
+q1</code></pre>
+<pre><code>##   final_mark
+## 1         78
+## 2         60
+## 3         47</code></pre>
+<p>The second argument in <code>dbGetQuery()</code> is the <code>SQL</code> query statement sent using <code>DB Browser</code> for <code>SQLite</code>. <br></p>
+<p>Note that the <code>dbGetQuery()</code> returns a <code>data.frame</code>.</p>
+<pre class="r"><code># data type of q1
+class(q1)</code></pre>
+<pre><code>## [1] &quot;data.frame&quot;</code></pre>
+<p>Alternatively, we can use <code>dbSendQuery()</code> and <code>dbFetch()</code>:</p>
+<pre class="r"><code># getting grades of a course using dbSendQuery()
+q1 &lt;- dbSendQuery(conn, &quot;SELECT final_mark
+                         FROM Grade
+                         WHERE course_id = &#39;ST101&#39;&quot;)
+q1</code></pre>
+<pre><code>## &lt;SQLiteResult&gt;
+##   SQL  SELECT final_mark
+##                          FROM Grade
+##                          WHERE course_id = &#39;ST101&#39;
+##   ROWS Fetched: 0 [incomplete]
+##        Changed: 0</code></pre>
+<p>Note <code>dbSendQuery()</code> only sends and executes the <code>SQL</code> query to the database engine. It does not extract any records. When we run <code>dbFetch()</code>, the executed query result will then be fetched.</p>
+<pre class="r"><code># fetch the result
+dbFetch(q1)</code></pre>
+<pre><code>##   final_mark
+## 1         78
+## 2         60
+## 3         47</code></pre>
+</div>
+<div id="getting-names-of-students-in-alphabetical-order" class="section level3">
+<h3>Getting Names of Students in Alphabetical Order</h3>
+<pre class="r"><code># getting names of students in alphabetical order
+dbGetQuery(conn, &quot;SELECT Student.name
+                  FROM Grade, Student
+                  WHERE Grade.course_id = &#39;ST101&#39; AND student.student_id = Grade.student_id
+                  ORDER BY Student.name&quot;)</code></pre>
+<pre><code>## Warning: Closing open result set, pending rows</code></pre>
+<pre><code>##            name
+## 1     Ava Smith
+## 2 Charlie Jones
+## 3    Emily Wood</code></pre>
+<p>Or we can do it with <code>NATURAL JOIN</code>:</p>
+<pre class="r"><code># using NATURAL JOIN
+dbGetQuery(conn, &quot;SELECT Student.name
+                  FROM Student NATURAL JOIN Grade
+                  WHERE course_id = &#39;ST101&#39;
+                  ORDER BY Student.name&quot;)</code></pre>
+<pre><code>##            name
+## 1     Ava Smith
+## 2 Charlie Jones
+## 3    Emily Wood</code></pre>
+</div>
+<div id="getting-courses-taken-by-students-ava-smith-or-freddie-harris" class="section level3">
+<h3>Getting Courses Taken by Students Ava Smith or Freddie Harris</h3>
+<pre class="r"><code># getting courses taken by students
+dbGetQuery(conn, &quot;SELECT DISTINCT Course.name
+                  FROM Student, Grade, Course
+                  WHERE (Student.name = &#39;Ava Smith&#39; OR Student.name = &#39;Freddie Harris&#39;)
+                        AND Student.student_id = Grade.student_id
+                        AND Course.course_id = Grade.course_id&quot;)</code></pre>
+<pre><code>##                            name
+## 1  programming for data science
+## 2 Managing and Visualising Data
+## 3                     Databases</code></pre>
+<p>Or we can do it using <code>JOIN</code>:</p>
+<pre class="r"><code># using JOIN
+dbGetQuery(conn, &quot;SELECT DISTINCT Course.name
+                  FROM (student NATURAL JOIN Grade) S JOIN Course on Course.course_id = S.course_id
+                  WHERE S.name = &#39;Ava Smith&#39; OR S.name = &#39;Freddie Harris&#39;&quot;)</code></pre>
+<pre><code>##                            name
+## 1  programming for data science
+## 2 Managing and Visualising Data
+## 3                     Databases</code></pre>
+</div>
+</div>
+</div>
+<div id="useful-links-and-resources" class="section level1">
+<h1>Useful Links and Resources</h1>
+<ul>
+<li><a href="https://solutions.posit.co/connections/db/r-packages/dbi/">Using <strong>DBI</strong></a></li>
+<li><a href="chrome-extension://efaidnbmnnnibpcajpcglclefindmkaj/https://cran.r-project.org/web/packages/DBI/DBI.pdf"><strong>DBI</strong> reference manual</a></li>
+<li><a href="https://cran.r-project.org/web/packages/RSQLite/vignettes/RSQLite.html"><strong>RSQLite</strong> vignettes</a></li>
+</ul>
 </div>
 
 

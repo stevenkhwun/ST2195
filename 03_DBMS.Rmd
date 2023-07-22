@@ -141,8 +141,168 @@ When we list the tables, we can now see three tables.
 dbListTables(conn)
 ```
 
+### Inserting Tuples/Rows
+
+Below we insert the year 1 student “Harper Taylor” with student ID 202029744 to Student by using the function `dbAppendTable()`:
+
+```{r results='hide'}
+# insert tuples/rows using dbAppendTable() function
+dbAppendTable(conn, "Student", data.frame(student_id = "202029744",
+                                          name = "Harper Taylor",
+                                          year = 1))
+```
+
+Alternatively, we can use `dbExecute()` function:
+
+```{r results='hide'}
+# insert tuples/rows using dbExecute() function
+dbExecute(conn,
+          "INSERT INTO Student VALUES(19890604, 'Never Forget', 1)")
+```
+
+When we browse the table, we can see the new row has been added.
+
+```{r}
+# browse the table
+dbReadTable(conn, "Student")
+```
+
+### Updating Tuples/Rows
+
+Below, we update the student ID of student Harper Taylor to 201929744 by `dbExecute()`. There is no specific function for updating a row in `DBI`.
+
+```{r results='hide'}
+# update tuples/rows
+dbExecute(conn, "Update Student SET student_id = '201929744'
+                                WHERE name = 'Harper Taylor'")
+```
+
+When we browse the table, we can see the new row has been added.
+
+```{r}
+# browse the table
+dbReadTable(conn, "Student")
+```
 
 
+### Deleting Tuples/Rows
+
+Below, we delete the record for the student Harper Taylor and Never Forget from table `Student` using `dbExecute()`. There is no specific function for deleting a row in `DBI`.
+
+```{r}
+dbExecute(conn,
+          "DELETE FROM Student WHERE name = 'Harper Taylor' OR name = 'Never Forget'")
+```
+
+When we browse the table, we can see the rows have been removed.
+
+```{r}
+# browse the table
+dbReadTable(conn, "Student")
+```
+
+## Disconnecting From the Database
+
+After we finish manipulating the database, we can close the connection using the function `dbDisconnect()` from `DBI`:
+
+```{r}
+# disconnecting from the database
+dbDisconnect(conn)
+```
+
+## Querying Databases Using `DBI`
+
+We have just disconnected from the database. We need to reconnect to the database by the following codes in order to perform querying databases.
+
+```{r}
+# re-connect to the database
+conn <- dbConnect(RSQLite::SQLite(), "university.db")
+dbListTables(conn)
+```
+
+Once we formulate the query into an `SQL SELECT` statement, we can get the query result in `R` using the function `dbGetQuery()` or `dbSendQuery()` from `DBI`. The following examples show how we can run queries from within `R`.
+
+### Getting Grades of a Course With `course_id` "ST101"
+
+```{r}
+# getting grades of a course using dbGetQuery()
+q1 <- dbGetQuery(conn, "SELECT final_mark
+                        FROM Grade
+                        WHERE course_id = 'ST101'")
+q1
+```
+
+The second argument in `dbGetQuery()` is the `SQL` query statement sent using `DB Browser` for `SQLite`.
+<br>
+
+Note that the `dbGetQuery()` returns a `data.frame`.
+
+```{r}
+# data type of q1
+class(q1)
+```
+
+Alternatively, we can use `dbSendQuery()` and `dbFetch()`:
+
+```{r}
+# getting grades of a course using dbSendQuery()
+q1 <- dbSendQuery(conn, "SELECT final_mark
+                         FROM Grade
+                         WHERE course_id = 'ST101'")
+q1
+```
+
+Note `dbSendQuery()` only sends and executes the `SQL` query to the database engine. It does not extract any records. When we run `dbFetch()`, the executed query result will then be fetched.
+
+```{r}
+# fetch the result
+dbFetch(q1)
+```
+
+### Getting Names of Students in Alphabetical Order
+
+```{r}
+# getting names of students in alphabetical order
+dbGetQuery(conn, "SELECT Student.name
+                  FROM Grade, Student
+                  WHERE Grade.course_id = 'ST101' AND student.student_id = Grade.student_id
+                  ORDER BY Student.name")
+```
+
+Or we can do it with `NATURAL JOIN`:
+
+```{r}
+# using NATURAL JOIN
+dbGetQuery(conn, "SELECT Student.name
+                  FROM Student NATURAL JOIN Grade
+                  WHERE course_id = 'ST101'
+                  ORDER BY Student.name")
+```
+
+### Getting Courses Taken by Students Ava Smith or Freddie Harris
+
+```{r}
+# getting courses taken by students
+dbGetQuery(conn, "SELECT DISTINCT Course.name
+                  FROM Student, Grade, Course
+                  WHERE (Student.name = 'Ava Smith' OR Student.name = 'Freddie Harris')
+                        AND Student.student_id = Grade.student_id
+                        AND Course.course_id = Grade.course_id")
+```
+
+Or we can do it using `JOIN`:
+
+```{r}
+# using JOIN
+dbGetQuery(conn, "SELECT DISTINCT Course.name
+                  FROM (student NATURAL JOIN Grade) S JOIN Course on Course.course_id = S.course_id
+                  WHERE S.name = 'Ava Smith' OR S.name = 'Freddie Harris'")
+
+```
 
 
+# Useful Links and Resources
 
+* [Using **DBI**](https://solutions.posit.co/connections/db/r-packages/dbi/)
+* [**DBI** reference manual](chrome-extension://efaidnbmnnnibpcajpcglclefindmkaj/https://cran.r-project.org/web/packages/DBI/DBI.pdf)
+* [**RSQLite** vignettes](https://cran.r-project.org/web/packages/RSQLite/vignettes/RSQLite.html)
