@@ -2,7 +2,7 @@
 
 ## Contents
 
-1. Introduction to data science
+1. [Introduction to data science](https://github.com/stevenkhwun/ST2195/blob/main/Handouts/ST2195%20Block%2001a_VLE.pdf)
     * Introduction to Data Science
     * Source-Code Editors and IDEs for R and Python
     * Installing and Interacting With R
