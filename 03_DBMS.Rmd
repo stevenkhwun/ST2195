@@ -1,0 +1,47 @@
+---
+title: "Introduction to Relational Database Management Systems"
+date: "2023/7/22"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Creating and Manipulating Databases in R Using DBI
+
+```{r}
+# load the required library
+library(DBI)
+```
+
+```{r results='hide'}
+# delete "university.db" if already exists
+if (file.exists("university.db"))
+  file.remove("university.db")
+```
+
+```{r}
+conn <- dbConnect(RSQLite::SQLite(), "university.db")
+```
+
+```{r}
+# read the CSV files into data.frame in R
+course <- read.csv("Course Files/Block 3/course.csv", header = TRUE)
+student <- read.csv("Course Files/Block 3/student.csv", header = TRUE)
+grade <- read.csv("Course Files/Block 3/grade.csv", header = TRUE)
+```
+
+```{r}
+dbWriteTable(conn, "Course", course)
+dbWriteTable(conn, "Student", student)
+dbWriteTable(conn, "Grade", grade)
+
+dbListTables(conn)
+
+dbReadTable(conn, "Student")
+
+dbListFields(conn, "Student")
+
+```
+
