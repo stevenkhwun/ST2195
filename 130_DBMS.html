@@ -387,6 +387,49 @@ dbGetQuery(conn, &quot;SELECT *
 ## 2     ST101  201985603         60
 ## 3     ST101  202003219         47</code></pre>
 </div>
+<div id="conditions-example-3---iif-function" class="section level3">
+<h3>Conditions: Example 3 - <code>iif()</code> function</h3>
+<p>In SQLite, <code>iif()</code> is a conditional function that returns the second or third argument based on the evaluation of the first argument. <br></p>
+<p>It’s logically equivalent to <code>CASE WHEN X THEN Y ELSE Z END</code>. <br></p>
+<p><code>iif()</code> is an abbreviation for <code>Immediate IF</code>.</p>
+<pre class="r"><code># using iif()
+dbGetQuery(conn, &quot;SELECT *,
+                  iif( final_mark &gt; 60, &#39;A&#39;, &#39;F&#39;) AS LetterGrade
+                  FROM Grade&quot;)</code></pre>
+<pre><code>##   course_id student_id final_mark LetterGrade
+## 1     ST101  201921323         78           A
+## 2     ST101  201985603         60           F
+## 3     ST101  202003219         47           F
+## 4     ST115  201921323         92           A
+## 5     ST115  202003219         67           A
+## 6     ST115  201933222         88           A
+## 7     ST207  201933222         73           A
+## 8     ST207  201875940         60           F</code></pre>
+<p>Refer to this <a href="https://database.guide/how-iif-works-in-sqlite/">link</a> for more information.</p>
+</div>
+<div id="conditions-example-4---case-statement" class="section level3">
+<h3>Conditions: Example 4 - <code>CASE</code> statement</h3>
+<p>The SQLite <code>CASE</code> expression evaluates a list of conditions and returns an expression based on the result of the evaluation.</p>
+<p>The <code>CASE</code> expression is similar to the <code>IF-THEN-ELSE</code> statement in other programming languages.</p>
+<pre class="r"><code># using iif()
+dbGetQuery(conn, &quot;SELECT *,
+                  CASE
+                    WHEN final_mark &gt;= 80 THEN &#39;A&#39;
+                    WHEN final_mark &lt; 80 AND final_mark &gt;= 60 THEN &#39;B&#39;
+                    ELSE &#39;C&#39;
+                    END LetterGrade
+                  FROM Grade&quot;)</code></pre>
+<pre><code>##   course_id student_id final_mark LetterGrade
+## 1     ST101  201921323         78           B
+## 2     ST101  201985603         60           B
+## 3     ST101  202003219         47           C
+## 4     ST115  201921323         92           A
+## 5     ST115  202003219         67           B
+## 6     ST115  201933222         88           A
+## 7     ST207  201933222         73           B
+## 8     ST207  201875940         60           B</code></pre>
+<p>Refer to this <a href="https://www.sqlitetutorial.net/sqlite-case/">link</a> for more information.</p>
+</div>
 <div id="several-tables" class="section level3">
 <h3>Several Tables</h3>
 <p>Getting Names of Students in Alphabetical Order <br></p>
