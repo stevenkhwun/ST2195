@@ -8,12 +8,24 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Creating and Manipulating Databases in R Using DBI
+# Creating and Manipulating Databases in R Using DBI
 
+## Connecting to Databases
+
+We load the library `DBI`, which are included in the package `RSQLite`. The package could be installed by the following code:
+
+```{r eval=FALSE}
+# the code is not executed as the package has already been installed
+install.packages("RSQLite")
+```
+
+And then we load the requied library `DBI`:
 ```{r}
 # load the required library
 library(DBI)
 ```
+
+We then use the function `dbConnect()` to create an object, `conn`, to connect to the SQLite driver to manipulate the database `university.db`. Before that, we need to check whether the database `university.db` exists. If the database `university.db` exists, the following code chunk will remove it.
 
 ```{r results='hide'}
 # delete "university.db" if already exists
@@ -21,9 +33,21 @@ if (file.exists("university.db"))
   file.remove("university.db")
 ```
 
+We use `dbConnect()` to connect to the database:
 ```{r}
 conn <- dbConnect(RSQLite::SQLite(), "university.db")
 ```
+
+We can list all tables in `university.db` using the function `dbListTable()` from `DBI`.
+
+```{r}
+# list all table
+dbListTables(conn)
+```
+
+Nothing is returned because we have not created any tables in the database yet.
+
+## Creating Tables
 
 ```{r}
 # read the CSV files into data.frame in R

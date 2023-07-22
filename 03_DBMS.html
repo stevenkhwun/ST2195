@@ -173,14 +173,30 @@ pre code {
 </div>
 
 
-<div id="creating-and-manipulating-databases-in-r-using-dbi" class="section level2">
-<h2>Creating and Manipulating Databases in R Using DBI</h2>
+<div id="creating-and-manipulating-databases-in-r-using-dbi" class="section level1">
+<h1>Creating and Manipulating Databases in R Using DBI</h1>
+<div id="connecting-to-databases" class="section level2">
+<h2>Connecting to Databases</h2>
+<p>We load the library <code>DBI</code>, which are included in the package <code>RSQLite</code>. The package could be installed by the following code:</p>
+<pre class="r"><code># the code is not executed as the package has already been installed
+install.packages(&quot;RSQLite&quot;)</code></pre>
+<p>And then we load the requied library <code>DBI</code>:</p>
 <pre class="r"><code># load the required library
 library(DBI)</code></pre>
+<p>We then use the function <code>dbConnect()</code> to create an object, <code>conn</code>, to connect to the SQLite driver to manipulate the database <code>university.db</code>. Before that, we need to check whether the database <code>university.db</code> exists. If the database <code>university.db</code> exists, the following code chunk will remove it.</p>
 <pre class="r"><code># delete &quot;university.db&quot; if already exists
 if (file.exists(&quot;university.db&quot;))
   file.remove(&quot;university.db&quot;)</code></pre>
+<p>We use <code>dbConnect()</code> to connect to the database:</p>
 <pre class="r"><code>conn &lt;- dbConnect(RSQLite::SQLite(), &quot;university.db&quot;)</code></pre>
+<p>We can list all tables in <code>university.db</code> using the function <code>dbListTable()</code> from <code>DBI</code>.</p>
+<pre class="r"><code># list all table
+dbListTables(conn)</code></pre>
+<pre><code>## character(0)</code></pre>
+<p>Nothing is returned because we have not created any tables in the database yet.</p>
+</div>
+<div id="creating-tables" class="section level2">
+<h2>Creating Tables</h2>
 <pre class="r"><code># read the CSV files into data.frame in R
 course &lt;- read.csv(&quot;Course Files/Block 3/course.csv&quot;, header = TRUE)
 student &lt;- read.csv(&quot;Course Files/Block 3/student.csv&quot;, header = TRUE)
@@ -202,6 +218,7 @@ dbListTables(conn)</code></pre>
 ## 7  201875940   Grace Clarke    2</code></pre>
 <pre class="r"><code>dbListFields(conn, &quot;Student&quot;)</code></pre>
 <pre><code>## [1] &quot;student_id&quot; &quot;name&quot;       &quot;year&quot;</code></pre>
+</div>
 </div>
 
 
