@@ -174,13 +174,13 @@ pre code {
 
 
 <div id="creating-and-manipulating-databases-in-r-using-dbi" class="section level1">
-<h1>Creating and Manipulating Databases in R Using DBI</h1>
+<h1>Creating and Manipulating Databases in R Using <code>DBI</code></h1>
 <div id="connecting-to-databases" class="section level2">
 <h2>Connecting to Databases</h2>
-<p>We load the library <code>DBI</code>, which are included in the package <code>RSQLite</code>. The package could be installed by the following code:</p>
+<p><code>DBI</code> is a library which is included in the package <code>RSQLite</code>. The package could be installed by the following code:</p>
 <pre class="r"><code># the code is not executed as the package has already been installed
 install.packages(&quot;RSQLite&quot;)</code></pre>
-<p>And then we load the requied library <code>DBI</code>:</p>
+<p>And then we load the required library <code>DBI</code>:</p>
 <pre class="r"><code># load the required library
 library(DBI)</code></pre>
 <p>We then use the function <code>dbConnect()</code> to create an object, <code>conn</code>, to connect to the SQLite driver to manipulate the database <code>university.db</code>. Before that, we need to check whether the database <code>university.db</code> exists. If the database <code>university.db</code> exists, the following code chunk will remove it.</p>
@@ -197,17 +197,22 @@ dbListTables(conn)</code></pre>
 </div>
 <div id="creating-tables" class="section level2">
 <h2>Creating Tables</h2>
+<p>We are going to create some tables to the database <code>university.db</code>. We will create the tables using data saved in the CSV files. We first read the CSV files into <code>data.frame</code> in R:</p>
 <pre class="r"><code># read the CSV files into data.frame in R
 course &lt;- read.csv(&quot;Course Files/Block 3/course.csv&quot;, header = TRUE)
 student &lt;- read.csv(&quot;Course Files/Block 3/student.csv&quot;, header = TRUE)
 grade &lt;- read.csv(&quot;Course Files/Block 3/grade.csv&quot;, header = TRUE)</code></pre>
+<p>We then copy the data frames <code>student</code>, <code>grade</code> and <code>course</code> to tables in the database <code>university.db</code> using <code>DBI</code>’s <code>dbWriteTable()</code> function:</p>
 <pre class="r"><code>dbWriteTable(conn, &quot;Course&quot;, course)
 dbWriteTable(conn, &quot;Student&quot;, student)
-dbWriteTable(conn, &quot;Grade&quot;, grade)
-
+dbWriteTable(conn, &quot;Grade&quot;, grade)</code></pre>
+<p>Now we can see there are three tables in the database:</p>
+<pre class="r"><code># list all tables
 dbListTables(conn)</code></pre>
 <pre><code>## [1] &quot;Course&quot;  &quot;Grade&quot;   &quot;Student&quot;</code></pre>
-<pre class="r"><code>dbReadTable(conn, &quot;Student&quot;)</code></pre>
+<p>We can also browse any table in the database using the function <code>dbReadTable()</code> from <code>DBI</code>.</p>
+<pre class="r"><code># browse the table
+dbReadTable(conn, &quot;Student&quot;)</code></pre>
 <pre><code>##   student_id           name year
 ## 1  201921323      Ava Smith    2
 ## 2  201832220    Ben Johnson    3
@@ -216,8 +221,44 @@ dbListTables(conn)</code></pre>
 ## 5  201985603     Emily Wood    1
 ## 6  201933222 Freddie Harris    2
 ## 7  201875940   Grace Clarke    2</code></pre>
-<pre class="r"><code>dbListFields(conn, &quot;Student&quot;)</code></pre>
+<p>Or we can see the attributes of a table (e.g. <code>Student</code>) by the function <code>dbListFields()</code>:</p>
+<pre class="r"><code># browse the attributes of a table
+dbListFields(conn, &quot;Student&quot;)</code></pre>
 <pre><code>## [1] &quot;student_id&quot; &quot;name&quot;       &quot;year&quot;</code></pre>
+</div>
+<div id="manipulating-databases" class="section level2">
+<h2>Manipulating Databases</h2>
+<p>The simplest way to manipulate databases is to use the <code>dbExecute()</code> function. This function executes SQL statements and returns the number of rows affected.</p>
+<div id="adding-a-new-table" class="section level3">
+<h3>Adding a New Table</h3>
+<p>We can add a new table by using the function <code>dbCreateTable()</code>. Alternatively, you can use <code>dbExecute()</code> to run the SQL command to create a new table.</p>
+<pre class="r"><code># add a new table using dbCreateTable() function
+dbCreateTable(conn, &quot;Teacher&quot;, c(staff_id = &quot;TEXT&quot;, name = &quot;TEXT&quot;))</code></pre>
+<p>Alternatively</p>
+<pre class="r"><code># add a new table using dbExecute() function
+dbExecute(conn,
+          &quot;CREATE TABLE Other_Staff (
+          staff_id TEXT PRIMARY KEY,
+          name TEXT)&quot;)</code></pre>
+<p>List of tables after adding:</p>
+<pre class="r"><code># list all tables
+dbListTables(conn)</code></pre>
+<pre><code>## [1] &quot;Course&quot;      &quot;Grade&quot;       &quot;Other_Staff&quot; &quot;Student&quot;     &quot;Teacher&quot;</code></pre>
+</div>
+<div id="deleting-a-table" class="section level3">
+<h3>Deleting a Table</h3>
+<p>We can remove a table by using the function <code>dbRemoveTable()</code>:</p>
+<pre class="r"><code># delete a table using dbRemoveTable() function
+dbRemoveTable(conn, &quot;Teacher&quot;)</code></pre>
+<p>Alternatively, we can use <code>dbExecute()</code> function:</p>
+<pre class="r"><code># delete a table using dbExecute() function
+dbExecute(conn,
+          &quot;DROP TABLE Other_Staff&quot;)</code></pre>
+<p>When we list the tables, we can now see three tables.</p>
+<pre class="r"><code># list all tables
+dbListTables(conn)</code></pre>
+<pre><code>## [1] &quot;Course&quot;  &quot;Grade&quot;   &quot;Student&quot;</code></pre>
+</div>
 </div>
 </div>
 

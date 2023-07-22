@@ -8,18 +8,18 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# Creating and Manipulating Databases in R Using DBI
+# Creating and Manipulating Databases in R Using `DBI`
 
 ## Connecting to Databases
 
-We load the library `DBI`, which are included in the package `RSQLite`. The package could be installed by the following code:
+`DBI` is a library which is included in the package `RSQLite`. The package could be installed by the following code:
 
 ```{r eval=FALSE}
 # the code is not executed as the package has already been installed
 install.packages("RSQLite")
 ```
 
-And then we load the requied library `DBI`:
+And then we load the required library `DBI`:
 ```{r}
 # load the required library
 library(DBI)
@@ -49,6 +49,8 @@ Nothing is returned because we have not created any tables in the database yet.
 
 ## Creating Tables
 
+We are going to create some tables to the database `university.db`. We will create the tables using data saved in the CSV files. We first read the CSV files into `data.frame` in R:
+
 ```{r}
 # read the CSV files into data.frame in R
 course <- read.csv("Course Files/Block 3/course.csv", header = TRUE)
@@ -56,16 +58,91 @@ student <- read.csv("Course Files/Block 3/student.csv", header = TRUE)
 grade <- read.csv("Course Files/Block 3/grade.csv", header = TRUE)
 ```
 
+We then copy the data frames `student`, `grade` and `course` to tables in the database `university.db` using `DBI`’s `dbWriteTable()` function:
+
 ```{r}
 dbWriteTable(conn, "Course", course)
 dbWriteTable(conn, "Student", student)
 dbWriteTable(conn, "Grade", grade)
-
-dbListTables(conn)
-
-dbReadTable(conn, "Student")
-
-dbListFields(conn, "Student")
-
 ```
+
+Now we can see there are three tables in the database:
+
+```{r}
+# list all tables
+dbListTables(conn)
+```
+
+We can also browse any table in the database using the function `dbReadTable()` from `DBI`.
+
+```{r}
+# browse the table
+dbReadTable(conn, "Student")
+```
+
+Or we can see the attributes of a table (e.g. `Student`) by the function `dbListFields()`:
+
+```{r}
+# browse the attributes of a table
+dbListFields(conn, "Student")
+```
+
+## Manipulating Databases
+
+The simplest way to manipulate databases is to use the `dbExecute()` function. This function executes SQL statements and returns the number of rows affected.
+
+### Adding a New Table
+
+We can add a new table by using the function `dbCreateTable()`. Alternatively, you can use `dbExecute()` to run the SQL command to create a new table.
+
+```{r}
+# add a new table using dbCreateTable() function
+dbCreateTable(conn, "Teacher", c(staff_id = "TEXT", name = "TEXT"))
+```
+
+Alternatively
+
+```{r results='hide'}
+# add a new table using dbExecute() function
+dbExecute(conn,
+          "CREATE TABLE Other_Staff (
+          staff_id TEXT PRIMARY KEY,
+          name TEXT)")
+```
+
+List of tables after adding:
+
+```{r}
+# list all tables
+dbListTables(conn)
+```
+
+### Deleting a Table
+
+We can remove a table by using the function `dbRemoveTable()`:
+
+```{r}
+# delete a table using dbRemoveTable() function
+dbRemoveTable(conn, "Teacher")
+```
+
+Alternatively, we can use `dbExecute()` function:
+
+```{r results='hide'}
+# delete a table using dbExecute() function
+dbExecute(conn,
+          "DROP TABLE Other_Staff")
+```
+
+When we list the tables, we can now see three tables.
+
+```{r}
+# list all tables
+dbListTables(conn)
+```
+
+
+
+
+
 
