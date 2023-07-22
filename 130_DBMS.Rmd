@@ -173,7 +173,7 @@ Below, we update the student ID of student Harper Taylor to 201929744 by `dbExec
 
 ```{r results='hide'}
 # update tuples/rows
-dbExecute(conn, "Update Student SET student_id = '201929744'
+dbExecute(conn, "UPDATE Student SET student_id = '201929744'
                                 WHERE name = 'Harper Taylor'")
 ```
 
@@ -222,7 +222,8 @@ dbListTables(conn)
 
 Once we formulate the query into an `SQL SELECT` statement, we can get the query result in `R` using the function `dbGetQuery()` or `dbSendQuery()` from `DBI`. The following examples show how we can run queries from within `R`.
 
-### Getting Grades of a Course With `course_id` "ST101"
+### Conditions: Example 1
+Getting Grades of a Course With `course_id` "ST101"
 
 ```{r}
 # getting grades of a course using dbGetQuery()
@@ -259,15 +260,48 @@ Note `dbSendQuery()` only sends and executes the `SQL` query to the database eng
 dbFetch(q1)
 ```
 
-### Getting Names of Students in Alphabetical Order
+### Conditions: Example 2
+We would like to return all attributes of the students who are in ST101:
+
+```{r}
+# getting all the attributes of the students who are in sT101
+dbGetQuery(conn, "SELECT *
+                  FROM Grade
+                  WHERE course_id = 'ST101'")
+```
+
+### Conditions: Example 3 - `iif()` function
+In SQLite, `iif()` is a conditional function that returns the second or third argument based on the evaluation of the first argument.
+<br>
+
+It’s logically equivalent to `CASE WHEN X THEN Y ELSE Z END`.
+<br>
+
+`iif()` is an abbreviation for `Immediate IF`.
+
+```{r}
+# using iif()
+dbGetQuery(conn, "SELECT *,
+                  iif( final_mark > 60, 'A', 'F') AS LetterGrade
+                  FROM Grade")
+```
+
+
+### Several Tables
+Getting Names of Students in Alphabetical Order
+<br>
+
+Note the student name information is in the `Student` table whereas the information about which course the student took is in `Grade`. In order to perform the query we need to combine information from the `Student` and `Grade` tables.
 
 ```{r}
 # getting names of students in alphabetical order
-dbGetQuery(conn, "SELECT Student.name
+dbGetQuery(conn, "SELECT name
                   FROM Grade, Student
-                  WHERE Grade.course_id = 'ST101' AND student.student_id = Grade.student_id
-                  ORDER BY Student.name")
+                  WHERE course_id = 'ST101' AND student.student_id = Grade.student_id
+                  ORDER BY name")
 ```
+
+Note that we don't need to specify the table name for the attributes `name` and `course_id` because attribute `name` is only in the table `Student` and the attribute `course_id` is only in the table `Grade`.
 
 Or we can do it with `NATURAL JOIN`:
 
@@ -279,10 +313,22 @@ dbGetQuery(conn, "SELECT Student.name
                   ORDER BY Student.name")
 ```
 
-### Getting Courses Taken by Students Ava Smith or Freddie Harris
+### Multiple Conditions 
+Getting Courses Taken by Students Ava Smith or Freddie Harris
 
 ```{r}
 # getting courses taken by students
+dbGetQuery(conn, "SELECT Course.name
+                  FROM Student, Grade, Course
+                  WHERE (Student.name = 'Ava Smith' OR Student.name = 'Freddie Harris')
+                        AND Student.student_id = Grade.student_id
+                        AND Course.course_id = Grade.course_id")
+```
+
+There are a few duplicate rows in the output, which we can remove using `DISTINCT`:
+
+```{r}
+# getting courses taken by students (duplicates removed)
 dbGetQuery(conn, "SELECT DISTINCT Course.name
                   FROM Student, Grade, Course
                   WHERE (Student.name = 'Ava Smith' OR Student.name = 'Freddie Harris')
@@ -300,6 +346,24 @@ dbGetQuery(conn, "SELECT DISTINCT Course.name
 
 ```
 
+### Aggregation
+We would like to calculate the average mark for each course according to the value of `course_id`:
+
+```{r}
+# calculate the average mark
+dbGetQuery(conn, "SELECT course_id, AVG(final_mark)
+                  FROM Grade
+                  GROUP BY course_id")
+```
+
+The attribute name for the average mark looks different from other attributes. We can rename it using the `AS` clause:
+
+```{r}
+# calculate the average mark
+dbGetQuery(conn, "SELECT course_id, AVG(final_mark) AS avg_mark
+                  FROM Grade
+                  GROUP BY course_id")
+```
 
 # Useful Links and Resources
 

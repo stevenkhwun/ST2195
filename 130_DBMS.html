@@ -288,7 +288,7 @@ dbReadTable(conn, &quot;Student&quot;)</code></pre>
 <h3>Updating Tuples/Rows</h3>
 <p>Below, we update the student ID of student Harper Taylor to 201929744 by <code>dbExecute()</code>. There is no specific function for updating a row in <code>DBI</code>.</p>
 <pre class="r"><code># update tuples/rows
-dbExecute(conn, &quot;Update Student SET student_id = &#39;201929744&#39;
+dbExecute(conn, &quot;UPDATE Student SET student_id = &#39;201929744&#39;
                                 WHERE name = &#39;Harper Taylor&#39;&quot;)</code></pre>
 <p>When we browse the table, we can see the new row has been added.</p>
 <pre class="r"><code># browse the table
@@ -337,8 +337,9 @@ conn &lt;- dbConnect(RSQLite::SQLite(), &quot;university.db&quot;)
 dbListTables(conn)</code></pre>
 <pre><code>## [1] &quot;Course&quot;  &quot;Grade&quot;   &quot;Student&quot;</code></pre>
 <p>Once we formulate the query into an <code>SQL SELECT</code> statement, we can get the query result in <code>R</code> using the function <code>dbGetQuery()</code> or <code>dbSendQuery()</code> from <code>DBI</code>. The following examples show how we can run queries from within <code>R</code>.</p>
-<div id="getting-grades-of-a-course-with-course_id-st101" class="section level3">
-<h3>Getting Grades of a Course With <code>course_id</code> “ST101”</h3>
+<div id="conditions-example-1" class="section level3">
+<h3>Conditions: Example 1</h3>
+<p>Getting Grades of a Course With <code>course_id</code> “ST101”</p>
 <pre class="r"><code># getting grades of a course using dbGetQuery()
 q1 &lt;- dbGetQuery(conn, &quot;SELECT final_mark
                         FROM Grade
@@ -373,18 +374,33 @@ dbFetch(q1)</code></pre>
 ## 2         60
 ## 3         47</code></pre>
 </div>
-<div id="getting-names-of-students-in-alphabetical-order" class="section level3">
-<h3>Getting Names of Students in Alphabetical Order</h3>
-<pre class="r"><code># getting names of students in alphabetical order
-dbGetQuery(conn, &quot;SELECT Student.name
-                  FROM Grade, Student
-                  WHERE Grade.course_id = &#39;ST101&#39; AND student.student_id = Grade.student_id
-                  ORDER BY Student.name&quot;)</code></pre>
+<div id="conditions-example-2" class="section level3">
+<h3>Conditions: Example 2</h3>
+<p>We would like to return all attributes of the students who are in ST101:</p>
+<pre class="r"><code># getting all the attributes of the students who are in sT101
+dbGetQuery(conn, &quot;SELECT *
+                  FROM Grade
+                  WHERE course_id = &#39;ST101&#39;&quot;)</code></pre>
 <pre><code>## Warning: Closing open result set, pending rows</code></pre>
+<pre><code>##   course_id student_id final_mark
+## 1     ST101  201921323         78
+## 2     ST101  201985603         60
+## 3     ST101  202003219         47</code></pre>
+</div>
+<div id="several-tables" class="section level3">
+<h3>Several Tables</h3>
+<p>Getting Names of Students in Alphabetical Order <br></p>
+<p>Note the student name information is in the <code>Student</code> table whereas the information about which course the student took is in <code>Grade</code>. In order to perform the query we need to combine information from the <code>Student</code> and <code>Grade</code> tables.</p>
+<pre class="r"><code># getting names of students in alphabetical order
+dbGetQuery(conn, &quot;SELECT name
+                  FROM Grade, Student
+                  WHERE course_id = &#39;ST101&#39; AND student.student_id = Grade.student_id
+                  ORDER BY name&quot;)</code></pre>
 <pre><code>##            name
 ## 1     Ava Smith
 ## 2 Charlie Jones
 ## 3    Emily Wood</code></pre>
+<p>Note that we don’t need to specify the table name for the attributes <code>name</code> and <code>course_id</code> because attribute <code>name</code> is only in the table <code>Student</code> and the attribute <code>course_id</code> is only in the table <code>Grade</code>.</p>
 <p>Or we can do it with <code>NATURAL JOIN</code>:</p>
 <pre class="r"><code># using NATURAL JOIN
 dbGetQuery(conn, &quot;SELECT Student.name
@@ -396,9 +412,22 @@ dbGetQuery(conn, &quot;SELECT Student.name
 ## 2 Charlie Jones
 ## 3    Emily Wood</code></pre>
 </div>
-<div id="getting-courses-taken-by-students-ava-smith-or-freddie-harris" class="section level3">
-<h3>Getting Courses Taken by Students Ava Smith or Freddie Harris</h3>
+<div id="multiple-conditions" class="section level3">
+<h3>Multiple Conditions</h3>
+<p>Getting Courses Taken by Students Ava Smith or Freddie Harris</p>
 <pre class="r"><code># getting courses taken by students
+dbGetQuery(conn, &quot;SELECT Course.name
+                  FROM Student, Grade, Course
+                  WHERE (Student.name = &#39;Ava Smith&#39; OR Student.name = &#39;Freddie Harris&#39;)
+                        AND Student.student_id = Grade.student_id
+                        AND Course.course_id = Grade.course_id&quot;)</code></pre>
+<pre><code>##                            name
+## 1  programming for data science
+## 2 Managing and Visualising Data
+## 3 Managing and Visualising Data
+## 4                     Databases</code></pre>
+<p>There are a few duplicate rows in the output, which we can remove using <code>DISTINCT</code>:</p>
+<pre class="r"><code># getting courses taken by students (duplicates removed)
 dbGetQuery(conn, &quot;SELECT DISTINCT Course.name
                   FROM Student, Grade, Course
                   WHERE (Student.name = &#39;Ava Smith&#39; OR Student.name = &#39;Freddie Harris&#39;)
@@ -417,6 +446,27 @@ dbGetQuery(conn, &quot;SELECT DISTINCT Course.name
 ## 1  programming for data science
 ## 2 Managing and Visualising Data
 ## 3                     Databases</code></pre>
+</div>
+<div id="aggregation" class="section level3">
+<h3>Aggregation</h3>
+<p>We would like to calculate the average mark for each course according to the value of <code>course_id</code>:</p>
+<pre class="r"><code># calculate the average mark
+dbGetQuery(conn, &quot;SELECT course_id, AVG(final_mark)
+                  FROM Grade
+                  GROUP BY course_id&quot;)</code></pre>
+<pre><code>##   course_id AVG(final_mark)
+## 1     ST101        61.66667
+## 2     ST115        82.33333
+## 3     ST207        66.50000</code></pre>
+<p>The attribute name for the average mark looks different from other attributes. We can rename it using the <code>AS</code> clause:</p>
+<pre class="r"><code># calculate the average mark
+dbGetQuery(conn, &quot;SELECT course_id, AVG(final_mark) AS avg_mark
+                  FROM Grade
+                  GROUP BY course_id&quot;)</code></pre>
+<pre><code>##   course_id avg_mark
+## 1     ST101 61.66667
+## 2     ST115 82.33333
+## 3     ST207 66.50000</code></pre>
 </div>
 </div>
 </div>
