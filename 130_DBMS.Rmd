@@ -16,22 +16,24 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
-# Connecting to Databases
+# Interacting with the SQLite driver in `R`
 
-`DBI` is a library which is included in the package `RSQLite`. The package could be installed by the following code:
+`DBI` is the library used to interact with the SQLite driver and perform various operations in manipulating the database. The library `DBI` is included in the package `RSQLite`. The package could be installed by the following code:
 
 ```{r eval=FALSE}
 # the code is not executed as the package has already been installed
 install.packages("RSQLite")
 ```
 
-And then we load the required library `DBI`:
+We can load the required library `DBI` by the following code:
 ```{r}
 # load the required library
 library(DBI)
 ```
 
-We then use the function `dbConnect()` to create an object, `conn`, to connect to the SQLite driver to manipulate the database `university.db`. Before that, we need to check whether the database `university.db` exists. If the database `university.db` exists, the following code chunk will remove it.
+## Connecting to Databases
+
+Thereafter, the first step is to connect to the database. We use the function `dbConnect()` to create an object, `conn`, to connect to the SQLite driver to manipulate the database `university.db`. Before that, we need to check whether the database `university.db` exists. If the database `university.db` exists, the following code chunk will remove it.
 
 ```{r results='hide'}
 # delete "university.db" if already exists
@@ -44,7 +46,7 @@ We use `dbConnect()` to connect to the database:
 conn <- dbConnect(RSQLite::SQLite(), "university.db")
 ```
 
-We can list all tables in `university.db` using the function `dbListTable()` from `DBI`.
+We have created the database `university.db`. However, it is empty now. We can list all tables in `university.db` using the function `dbListTable()` from `DBI`.
 
 ```{r}
 # list all table
@@ -53,13 +55,15 @@ dbListTables(conn)
 
 Nothing is returned because we have not created any tables in the database yet.
 
-# Creating Tables
+## Creating Tables
 
 We are going to create some tables to the database `university.db`. We will create the tables using data saved in the CSV files. We first read the CSV files into `data.frame` in R:
 
 ```{r}
 # read the CSV files into data.frame in R
-course <- read.csv("Course Files/Block 3/course.csv", header = TRUE)
+course.csv <- "https://raw.githubusercontent.com/stevenkhwun/ST2195/main/Course%20Files/Block%203/course.csv"
+
+course <- read.csv(course.csv, header = TRUE)
 student <- read.csv("Course Files/Block 3/student.csv", header = TRUE)
 grade <- read.csv("Course Files/Block 3/grade.csv", header = TRUE)
 ```
@@ -93,9 +97,31 @@ Or we can see the attributes of a table (e.g. `Student`) by the function `dbList
 dbListFields(conn, "Student")
 ```
 
+## Disconnecting From the Database
+
+After we finish creating the database, we can close the connection using the function `dbDisconnect()` from `DBI`:
+
+```{r}
+# disconnecting from the database
+dbDisconnect(conn)
+```
+
+
+
 # Manipulating Databases
 
 The simplest way to manipulate databases is to use the `dbExecute()` function. This function executes SQL statements and returns the number of rows affected.
+<br>
+
+We have just disconnected from the database. We need to reconnect to the database by the following codes in order to perform querying databases.
+
+```{r}
+# re-connect to the database
+conn <- dbConnect(RSQLite::SQLite(), "university.db")
+dbListTables(conn)
+```
+
+
 
 ## Adding a New Table
 
@@ -207,24 +233,9 @@ When we browse the table, we can see the rows have been removed.
 dbReadTable(conn, "Student")
 ```
 
-# Disconnecting From the Database
-
-After we finish manipulating the database, we can close the connection using the function `dbDisconnect()` from `DBI`:
-
-```{r}
-# disconnecting from the database
-dbDisconnect(conn)
-```
 
 # Querying Databases Using `DBI`
 
-We have just disconnected from the database. We need to reconnect to the database by the following codes in order to perform querying databases.
-
-```{r}
-# re-connect to the database
-conn <- dbConnect(RSQLite::SQLite(), "university.db")
-dbListTables(conn)
-```
 
 Once we formulate the query into an `SQL SELECT` statement, we can get the query result in `R` using the function `dbGetQuery()` or `dbSendQuery()` from `DBI`. The following examples show how we can run queries from within `R`.
 
