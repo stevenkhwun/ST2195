@@ -493,9 +493,31 @@ dbGetQuery(conn, "SELECT *
                   ORDER BY Student.name")
 ```
 
+we get a result where:
+
+*   All the students from the left table `Student` are included (including Ben Johnson and Dan Norris)
+*   The students with no corresponding record in the right table `Grade`, have `NULL` value in attributes `course_id` and `final_mark` from `Grade`.
+
+
+## `CROSS JOIN`
+
+When we use `CROSS JOIN`:
+
+```{r}
+# use 'CROSS JOIN'
+dbGetQuery(conn, "SELECT *
+                  FROM Student CROSS JOIN Grade
+                  ORDER BY Student.name")
+```
+
+we get 56 rows, which is number of rows in `Student` (7) times number of rows in `Grade` (8).
+
 
 # Useful Links and Resources
 
 * [Using **DBI**](https://solutions.posit.co/connections/db/r-packages/dbi/)
 * [**DBI** reference manual](chrome-extension://efaidnbmnnnibpcajpcglclefindmkaj/https://cran.r-project.org/web/packages/DBI/DBI.pdf)
+* [SQLite join](https://www.sqlitetutorial.net/sqlite-join/) to learn more about how to join tables via SQLite
+* [SQLite select](https://www.sqlitetutorial.net/sqlite-select/) to learn more about how to query via SQLite
+* [SQL](https://en.wikipedia.org/wiki/SQL) from Wikipedia
 * [**RSQLite** vignettes](https://cran.r-project.org/web/packages/RSQLite/vignettes/RSQLite.html)

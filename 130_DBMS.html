@@ -661,16 +661,87 @@
 <span id="cb76-3"><a href="#cb76-3" aria-hidden="true" tabindex="-1"></a><span class="st">                  FROM Student LEFT JOIN Grade USING (student_id)</span></span>
 <span id="cb76-4"><a href="#cb76-4" aria-hidden="true" tabindex="-1"></a><span class="st">                  ORDER BY Student.name&quot;</span>)</span></code></pre></div>
 <pre><code>##    student_id           name year course_id final_mark
-## 1   202045234     Dan Norris    1      &lt;NA&gt;         NA
-## 2   201921323      Ava Smith    2     ST101         78
-## 3   201921323      Ava Smith    2     ST115         92
-## 4   201832220    Ben Johnson    3      &lt;NA&gt;         NA
-## 5   202003219  Charlie Jones    1     ST101         47
-## 6   202003219  Charlie Jones    1     ST115         67
+## 1   201921323      Ava Smith    2     ST101         78
+## 2   201921323      Ava Smith    2     ST115         92
+## 3   201832220    Ben Johnson    3      &lt;NA&gt;         NA
+## 4   202003219  Charlie Jones    1     ST101         47
+## 5   202003219  Charlie Jones    1     ST115         67
+## 6   202045234     Dan Norris    1      &lt;NA&gt;         NA
 ## 7   201985603     Emily Wood    1     ST101         60
 ## 8   201933222 Freddie Harris    2     ST115         88
 ## 9   201933222 Freddie Harris    2     ST207         73
 ## 10  201875940   Grace Clarke    2     ST207         60</code></pre>
+<p>we get a result where:</p>
+<ul>
+<li>All the students from the left table <code>Student</code> are included (including Ben Johnson and Dan Norris)</li>
+<li>The students with no corresponding record in the right table <code>Grade</code>, have <code>NULL</code> value in attributes <code>course_id</code> and <code>final_mark</code> from <code>Grade</code>.</li>
+</ul>
+</div>
+<div id="cross-join" class="section level2">
+<h2><code>CROSS JOIN</code></h2>
+<p>When we use <code>CROSS JOIN</code>:</p>
+<div class="sourceCode" id="cb78"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb78-1"><a href="#cb78-1" aria-hidden="true" tabindex="-1"></a><span class="co"># use &#39;CROSS JOIN&#39;</span></span>
+<span id="cb78-2"><a href="#cb78-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dbGetQuery</span>(conn, <span class="st">&quot;SELECT *</span></span>
+<span id="cb78-3"><a href="#cb78-3" aria-hidden="true" tabindex="-1"></a><span class="st">                  FROM Student CROSS JOIN Grade</span></span>
+<span id="cb78-4"><a href="#cb78-4" aria-hidden="true" tabindex="-1"></a><span class="st">                  ORDER BY Student.name&quot;</span>)</span></code></pre></div>
+<pre><code>##    student_id           name year course_id student_id final_mark
+## 1   201921323      Ava Smith    2     ST101  201921323         78
+## 2   201921323      Ava Smith    2     ST101  201985603         60
+## 3   201921323      Ava Smith    2     ST101  202003219         47
+## 4   201921323      Ava Smith    2     ST115  201921323         92
+## 5   201921323      Ava Smith    2     ST115  202003219         67
+## 6   201921323      Ava Smith    2     ST115  201933222         88
+## 7   201921323      Ava Smith    2     ST207  201933222         73
+## 8   201921323      Ava Smith    2     ST207  201875940         60
+## 9   201832220    Ben Johnson    3     ST101  201921323         78
+## 10  201832220    Ben Johnson    3     ST101  201985603         60
+## 11  201832220    Ben Johnson    3     ST101  202003219         47
+## 12  201832220    Ben Johnson    3     ST115  201921323         92
+## 13  201832220    Ben Johnson    3     ST115  202003219         67
+## 14  201832220    Ben Johnson    3     ST115  201933222         88
+## 15  201832220    Ben Johnson    3     ST207  201933222         73
+## 16  201832220    Ben Johnson    3     ST207  201875940         60
+## 17  202003219  Charlie Jones    1     ST101  201921323         78
+## 18  202003219  Charlie Jones    1     ST101  201985603         60
+## 19  202003219  Charlie Jones    1     ST101  202003219         47
+## 20  202003219  Charlie Jones    1     ST115  201921323         92
+## 21  202003219  Charlie Jones    1     ST115  202003219         67
+## 22  202003219  Charlie Jones    1     ST115  201933222         88
+## 23  202003219  Charlie Jones    1     ST207  201933222         73
+## 24  202003219  Charlie Jones    1     ST207  201875940         60
+## 25  202045234     Dan Norris    1     ST101  201921323         78
+## 26  202045234     Dan Norris    1     ST101  201985603         60
+## 27  202045234     Dan Norris    1     ST101  202003219         47
+## 28  202045234     Dan Norris    1     ST115  201921323         92
+## 29  202045234     Dan Norris    1     ST115  202003219         67
+## 30  202045234     Dan Norris    1     ST115  201933222         88
+## 31  202045234     Dan Norris    1     ST207  201933222         73
+## 32  202045234     Dan Norris    1     ST207  201875940         60
+## 33  201985603     Emily Wood    1     ST101  201921323         78
+## 34  201985603     Emily Wood    1     ST101  201985603         60
+## 35  201985603     Emily Wood    1     ST101  202003219         47
+## 36  201985603     Emily Wood    1     ST115  201921323         92
+## 37  201985603     Emily Wood    1     ST115  202003219         67
+## 38  201985603     Emily Wood    1     ST115  201933222         88
+## 39  201985603     Emily Wood    1     ST207  201933222         73
+## 40  201985603     Emily Wood    1     ST207  201875940         60
+## 41  201933222 Freddie Harris    2     ST101  201921323         78
+## 42  201933222 Freddie Harris    2     ST101  201985603         60
+## 43  201933222 Freddie Harris    2     ST101  202003219         47
+## 44  201933222 Freddie Harris    2     ST115  201921323         92
+## 45  201933222 Freddie Harris    2     ST115  202003219         67
+## 46  201933222 Freddie Harris    2     ST115  201933222         88
+## 47  201933222 Freddie Harris    2     ST207  201933222         73
+## 48  201933222 Freddie Harris    2     ST207  201875940         60
+## 49  201875940   Grace Clarke    2     ST101  201921323         78
+## 50  201875940   Grace Clarke    2     ST101  201985603         60
+## 51  201875940   Grace Clarke    2     ST101  202003219         47
+## 52  201875940   Grace Clarke    2     ST115  201921323         92
+## 53  201875940   Grace Clarke    2     ST115  202003219         67
+## 54  201875940   Grace Clarke    2     ST115  201933222         88
+## 55  201875940   Grace Clarke    2     ST207  201933222         73
+## 56  201875940   Grace Clarke    2     ST207  201875940         60</code></pre>
+<p>we get 56 rows, which is number of rows in <code>Student</code> (7) times number of rows in <code>Grade</code> (8).</p>
 </div>
 </div>
 <div id="useful-links-and-resources" class="section level1">
@@ -678,6 +749,9 @@
 <ul>
 <li><a href="https://solutions.posit.co/connections/db/r-packages/dbi/">Using <strong>DBI</strong></a></li>
 <li><a href="chrome-extension://efaidnbmnnnibpcajpcglclefindmkaj/https://cran.r-project.org/web/packages/DBI/DBI.pdf"><strong>DBI</strong> reference manual</a></li>
+<li><a href="https://www.sqlitetutorial.net/sqlite-join/">SQLite join</a> to learn more about how to join tables via SQLite</li>
+<li><a href="https://www.sqlitetutorial.net/sqlite-select/">SQLite select</a> to learn more about how to query via SQLite</li>
+<li><a href="https://en.wikipedia.org/wiki/SQL">SQL</a> from Wikipedia</li>
 <li><a href="https://cran.r-project.org/web/packages/RSQLite/vignettes/RSQLite.html"><strong>RSQLite</strong> vignettes</a></li>
 </ul>
 </div>
