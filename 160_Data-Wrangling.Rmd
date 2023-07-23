@@ -1,0 +1,93 @@
+---
+title: "Data Wrangling Operations in `R`"
+date: "`r Sys.Date()`"
+author: Steven Wun
+output:
+  rmdformats::material:
+    highlight: kate
+  pdf_document: default
+  word_document: default
+  html_document:
+    number_sections: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Introduction
+
+In this page, we will focus on some `R` packages and functionality that is extremely useful during data wrangling processes. In particular, we will introduce:
+
+*   The `*apply` family of `R` functions that allow us to apply functions to specific dimensions of matrices and arrays, and to data frames and lists
+*   Reshaping data sets
+*   Stacking data sets
+*   Subsetting data sets
+*   The verbs of the `dplyr` `R` package
+
+# `*apply` Functions
+
+The `*apply()` family is a collection of functions in `R` that is used to manipulate slices of data from matrices, arrays, lists and data frames in a repetitive way without explicitly writing loops. These functions apply a function to each element of the selected input data. Below, we focus on the following `*apply()` functions:
+
+*   `apply()`: Returns a vector or array or list of values obtained by applying a function to margins of an array or matrix.
+*   `lapply()`: Returns a list of the same length as the selected input data, each element of which is the result of applying the chosen function to the corresponding element of the selected input data.
+*   `sapply()`: A more user-friendly version of `lapply()`. Returns a vector or matrix by default.
+*   `mapply()`: This is the multivariate version of `sapply()`. It applies a function to multiple lists or vector arguments.
+
+## `apply()`
+
+The `apply()` function takes a data frame or matrix as input and returns an output of vector, list or array type. The `apply()` function is mainly used to avoid explicit uses of loops.
+
+```{r}
+# create a simple matrix
+my_matrix <- matrix(c(1:20), nrow = 5)
+my_matrix
+# using 'apply()' to calculate the sum of each row
+apply(X = my_matrix, MARGIN = 1, FUN = sum)
+# using 'apply()' to calculate the sum of each column
+apply(X = my_matrix, MARGIN = 2, FUN = sum)
+```
+
+In the above code chunk, we use the `apply()` function to calculate the sum of each row of the matrix by setting `MARGIN = 1`, calculate the sum of each column of the matrix by setting `MARGIN = 2`.
+<BR>
+
+In both examples, we applied the `sum()` function to the margins. However, we could have used any other function, even user-defined ones, as long as they can work with the inputs specified by the margin we use. For example, if we want to get basic summaries of each of the columns we can do
+
+```{r}
+# basic summaries of each of the columns
+apply(my_matrix, 2, summary)
+```
+
+As we would expect from the `summary()` function applied to a vector, the third column of the output above has
+
+```{r results='hold'}
+# min. of the 3rd column
+min(my_matrix[, 3])
+# 1st quantile of the 3rd column
+quantile(my_matrix[, 3], 0.25)
+# median of the 3rd column
+median(my_matrix[, 3])
+# mean of the 3rd column
+mean(my_matrix[, 3])
+# 3rd quantile of the 3rd column
+quantile(my_matrix[, 3], 0.75)
+# max. of the 3rd column
+max(my_matrix[, 3])
+```
+
+## `lapply()`
+
+The function `lapply()` takes a vector or list `X` and applies the function `FUN` to each of its elements. Then, `lapply()` will output a list which is of the same length as `X`, where each element is the outcome of applying the function `FUN` on the corresponding element of `X`.
+
+```{r}
+# define 'First_name' and 'Last_name'
+First_name <- c("John", "Jane", "Tim", "Michael", "Emma")
+Last_name <- c("Doe", "Smith", "Williams", "Taylor", "Wilson")
+# create a list from the names
+Name_list <- list(First_name, Last_name)
+Name_list
+```
+
+
+
