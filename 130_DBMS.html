@@ -192,7 +192,7 @@
       <div class="row">
         <div class="col-xs-3">
 	  	  <div id="header">
-	    <h1 class="title">Creating and Manipulating Databases in R Using <code>DBI</code></h1>
+	    <h1 class="title">Creating and Manipulating Databases in <code>R</code> Using <code>DBI</code></h1>
 	    	    	    	    <h4 class="author">Steven Wun</h4>
 	    	    	    	    <h4 class="date">2023-07-23</h4>
 	    	  </div>
@@ -209,7 +209,8 @@
 <ul>
 <li><a href="#interacting-with-the-sqlite-driver-in-r">Interacting with the SQLite driver in <code>R</code></a></li>
 <li><a href="#manipulating-databases">Manipulating Databases</a></li>
-<li><a href="#querying-databases-using-dbi">Querying Databases Using <code>DBI</code></a></li>
+<li><a href="#basic-sqlsqlite-syntax-and-queries">Basic SQL/SQLite Syntax and Queries</a></li>
+<li><a href="#sql-joins">SQL Joins</a></li>
 <li><a href="#useful-links-and-resources">Useful Links and Resources</a></li>
 </ul>
 </div>
@@ -247,12 +248,15 @@
 <div id="creating-tables" class="section level2">
 <h2>Creating Tables</h2>
 <p>We are going to create some tables to the database <code>university.db</code>. We will create the tables using data saved in the CSV files. We first read the CSV files into <code>data.frame</code> in R:</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># read the CSV files into data.frame in R</span></span>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># assign the CSV files on GitHub site to objects </span></span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>course.csv <span class="ot">&lt;-</span> <span class="st">&quot;https://raw.githubusercontent.com/stevenkhwun/ST2195/main/Course%20Files/Block%203/course.csv&quot;</span></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>course <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(course.csv, <span class="at">header =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>student <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">&quot;Course Files/Block 3/student.csv&quot;</span>, <span class="at">header =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>grade <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">&quot;Course Files/Block 3/grade.csv&quot;</span>, <span class="at">header =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>student.csv <span class="ot">&lt;-</span> <span class="st">&quot;https://raw.githubusercontent.com/stevenkhwun/ST2195/main/Course%20Files/Block%203/student.csv&quot;</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>grade.csv <span class="ot">&lt;-</span> <span class="st">&quot;https://raw.githubusercontent.com/stevenkhwun/ST2195/main/Course%20Files/Block%203/grade.csv&quot;</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="co"># read the CSV files into data.frame in R</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>course <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(course.csv, <span class="at">header =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>student <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(student.csv, <span class="at">header =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>grade <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(grade.csv, <span class="at">header =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
 <p>We then copy the data frames <code>student</code>, <code>grade</code> and <code>course</code> to tables in the database <code>university.db</code> using <code>DBI</code>’s <code>dbWriteTable()</code> function:</p>
 <div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dbWriteTable</span>(conn, <span class="st">&quot;Course&quot;</span>, course)</span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dbWriteTable</span>(conn, <span class="st">&quot;Student&quot;</span>, student)</span>
@@ -287,7 +291,7 @@
 <div id="manipulating-databases" class="section level1">
 <h1>Manipulating Databases</h1>
 <p>The simplest way to manipulate databases is to use the <code>dbExecute()</code> function. This function executes SQL statements and returns the number of rows affected. <br></p>
-<p>We have just disconnected from the database. We need to reconnect to the database by the following codes in order to perform querying databases.</p>
+<p>We have just disconnected from the database. We need to reconnect to the database by the following codes in order to perform manipulating the databases.</p>
 <div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># re-connect to the database</span></span>
 <span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>conn <span class="ot">&lt;-</span> <span class="fu">dbConnect</span>(RSQLite<span class="sc">::</span><span class="fu">SQLite</span>(), <span class="st">&quot;university.db&quot;</span>)</span>
 <span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="fu">dbListTables</span>(conn)</span></code></pre></div>
@@ -332,7 +336,7 @@
 <p>Alternatively, we can use <code>dbExecute()</code> function:</p>
 <div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># insert tuples/rows using dbExecute() function</span></span>
 <span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(conn,</span>
-<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>          <span class="st">&quot;INSERT INTO Student VALUES(19890604, &#39;Never Forget&#39;, 1)&quot;</span>)</span></code></pre></div>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>          <span class="st">&quot;INSERT INTO Student VALUES(201989604, &#39;Paul Simon&#39;, 1)&quot;</span>)</span></code></pre></div>
 <p>When we browse the table, we can see the new row has been added.</p>
 <div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co"># browse the table</span></span>
 <span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dbReadTable</span>(conn, <span class="st">&quot;Student&quot;</span>)</span></code></pre></div>
@@ -345,7 +349,7 @@
 ## 6  201933222 Freddie Harris    2
 ## 7  201875940   Grace Clarke    2
 ## 8  202029744  Harper Taylor    1
-## 9   19890604   Never Forget    1</code></pre>
+## 9  201989604     Paul Simon    1</code></pre>
 </div>
 <div id="updating-tuplesrows" class="section level2">
 <h2>Updating Tuples/Rows</h2>
@@ -365,13 +369,13 @@
 ## 6  201933222 Freddie Harris    2
 ## 7  201875940   Grace Clarke    2
 ## 8  201929744  Harper Taylor    1
-## 9   19890604   Never Forget    1</code></pre>
+## 9  201989604     Paul Simon    1</code></pre>
 </div>
 <div id="deleting-tuplesrows" class="section level2">
 <h2>Deleting Tuples/Rows</h2>
 <p>Below, we delete the record for the student Harper Taylor and Never Forget from table <code>Student</code> using <code>dbExecute()</code>. There is no specific function for deleting a row in <code>DBI</code>.</p>
 <div class="sourceCode" id="cb33"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(conn,</span>
-<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>          <span class="st">&quot;DELETE FROM Student WHERE name = &#39;Harper Taylor&#39; OR name = &#39;Never Forget&#39;&quot;</span>)</span></code></pre></div>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>          <span class="st">&quot;DELETE FROM Student WHERE name = &#39;Harper Taylor&#39; OR name = &#39;Paul Simon&#39;&quot;</span>)</span></code></pre></div>
 <pre><code>## [1] 2</code></pre>
 <p>When we browse the table, we can see the rows have been removed.</p>
 <div class="sourceCode" id="cb35"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="co"># browse the table</span></span>
@@ -386,11 +390,11 @@
 ## 7  201875940   Grace Clarke    2</code></pre>
 </div>
 </div>
-<div id="querying-databases-using-dbi" class="section level1">
-<h1>Querying Databases Using <code>DBI</code></h1>
+<div id="basic-sqlsqlite-syntax-and-queries" class="section level1">
+<h1>Basic SQL/SQLite Syntax and Queries</h1>
 <p>Once we formulate the query into an <code>SQL SELECT</code> statement, we can get the query result in <code>R</code> using the function <code>dbGetQuery()</code> or <code>dbSendQuery()</code> from <code>DBI</code>. The following examples show how we can run queries from within <code>R</code>.</p>
-<div id="conditions-example-1" class="section level2">
-<h2>Conditions: Example 1</h2>
+<div id="conditions-basics" class="section level2">
+<h2>Conditions: Basics</h2>
 <p>Getting Grades of a Course With <code>course_id</code> “ST101”</p>
 <div class="sourceCode" id="cb37"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="co"># getting grades of a course using dbGetQuery()</span></span>
 <span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>q1 <span class="ot">&lt;-</span> <span class="fu">dbGetQuery</span>(conn, <span class="st">&quot;SELECT final_mark</span></span>
@@ -426,8 +430,8 @@
 ## 2         60
 ## 3         47</code></pre>
 </div>
-<div id="conditions-example-2" class="section level2">
-<h2>Conditions: Example 2</h2>
+<div id="conditions-the-operator" class="section level2">
+<h2>Conditions: The operator <code>*</code></h2>
 <p>We would like to return all attributes of the students who are in ST101:</p>
 <div class="sourceCode" id="cb45"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="co"># getting all the attributes of the students who are in sT101</span></span>
 <span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dbGetQuery</span>(conn, <span class="st">&quot;SELECT *</span></span>
@@ -439,8 +443,8 @@
 ## 2     ST101  201985603         60
 ## 3     ST101  202003219         47</code></pre>
 </div>
-<div id="conditions-example-3---iif-function" class="section level2">
-<h2>Conditions: Example 3 - <code>iif()</code> function</h2>
+<div id="conditions-iif-function" class="section level2">
+<h2>Conditions: <code>iif()</code> function</h2>
 <p>In SQLite, <code>iif()</code> is a conditional function that returns the second or third argument based on the evaluation of the first argument. <br></p>
 <p>It’s logically equivalent to <code>CASE WHEN X THEN Y ELSE Z END</code>. <br></p>
 <p><code>iif()</code> is an abbreviation for <code>Immediate IF</code>.</p>
@@ -459,8 +463,8 @@
 ## 8     ST207  201875940         60           F</code></pre>
 <p>Refer to this <a href="https://database.guide/how-iif-works-in-sqlite/">link</a> for more information.</p>
 </div>
-<div id="conditions-example-4---case-statement" class="section level2">
-<h2>Conditions: Example 4 - <code>CASE</code> statement</h2>
+<div id="conditions-case-statement" class="section level2">
+<h2>Conditions: <code>CASE</code> statement</h2>
 <p>The SQLite <code>CASE</code> expression evaluates a list of conditions and returns an expression based on the result of the evaluation.</p>
 <p>The <code>CASE</code> expression is similar to the <code>IF-THEN-ELSE</code> statement in other programming languages.</p>
 <div class="sourceCode" id="cb50"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="co"># using iif()</span></span>
@@ -542,8 +546,8 @@
 ## 2 Managing and Visualising Data
 ## 3                     Databases</code></pre>
 </div>
-<div id="aggregation" class="section level2">
-<h2>Aggregation</h2>
+<div id="aggregation-and-group-by" class="section level2">
+<h2>Aggregation and <code>GROUP BY</code></h2>
 <p>We would like to calculate the average mark for each course according to the value of <code>course_id</code>:</p>
 <div class="sourceCode" id="cb62"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="co"># calculate the average mark</span></span>
 <span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dbGetQuery</span>(conn, <span class="st">&quot;SELECT course_id, AVG(final_mark)</span></span>
@@ -562,6 +566,111 @@
 ## 1     ST101 61.66667
 ## 2     ST115 82.33333
 ## 3     ST207 66.50000</code></pre>
+</div>
+</div>
+<div id="sql-joins" class="section level1">
+<h1>SQL Joins</h1>
+<p>A <code>JOIN</code> clause combines rows from two or more tables based on related column(s) between them. The SQL language offers many different types of joins.</p>
+<ul>
+<li><code>INNER JOIN</code>: Select rows that have matching values in both tables based on the given columns</li>
+<li><code>NATURAL JOIN</code>: Similar to <code>INNER JOIN</code> except that there is no need to specify which columns are used for matching values</li>
+<li><code>OUTER JOIN</code>: Unlike <code>INNER JOIN</code>, unmatched rows in one or both tables can be returned. There are <code>LEFT</code>, <code>RIGHT</code> and <code>FULL OUTER JOIN</code>. <code>SQLite</code> only supports <code>LEFT OUTER JOIN</code>. For <code>LEFT OUTER JOIN</code>, all the records from the left table are included in the result.</li>
+<li><code>CROSS JOIN</code>: Return the Cartesian product of the two joined tables, by matching all the values from the left table with all the values from the right table.</li>
+</ul>
+<div id="inner-join" class="section level2">
+<h2><code>INNER JOIN</code></h2>
+<p>Below we get the records about students who took the course with course ID ST101 and sort the student names in alphabetical order. Without using Joins, we can implement the following codes:</p>
+<div class="sourceCode" id="cb66"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a><span class="co"># without using join</span></span>
+<span id="cb66-2"><a href="#cb66-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dbGetQuery</span>(conn, <span class="st">&quot;SELECT *</span></span>
+<span id="cb66-3"><a href="#cb66-3" aria-hidden="true" tabindex="-1"></a><span class="st">                  FROM Student, Grade</span></span>
+<span id="cb66-4"><a href="#cb66-4" aria-hidden="true" tabindex="-1"></a><span class="st">                  WHERE Grade.course_id = &#39;ST101&#39; AND Student.student_id = Grade.student_id</span></span>
+<span id="cb66-5"><a href="#cb66-5" aria-hidden="true" tabindex="-1"></a><span class="st">                  ORDER BY Student.name&quot;</span>)</span></code></pre></div>
+<pre><code>##   student_id          name year course_id student_id final_mark
+## 1  201921323     Ava Smith    2     ST101  201921323         78
+## 2  202003219 Charlie Jones    1     ST101  202003219         47
+## 3  201985603    Emily Wood    1     ST101  201985603         60</code></pre>
+<p>We can rewrite the above query using <code>INNER JOIN</code>:</p>
+<div class="sourceCode" id="cb68"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a><span class="co"># using INNER JOIN</span></span>
+<span id="cb68-2"><a href="#cb68-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dbGetQuery</span>(conn, <span class="st">&quot;SELECT *</span></span>
+<span id="cb68-3"><a href="#cb68-3" aria-hidden="true" tabindex="-1"></a><span class="st">                  FROM Student JOIN Grade ON Student.student_id = Grade.student_id</span></span>
+<span id="cb68-4"><a href="#cb68-4" aria-hidden="true" tabindex="-1"></a><span class="st">                  WHERE course_id = &#39;ST101&#39;</span></span>
+<span id="cb68-5"><a href="#cb68-5" aria-hidden="true" tabindex="-1"></a><span class="st">                  ORDER BY Student.name&quot;</span>)</span></code></pre></div>
+<pre><code>##   student_id          name year course_id student_id final_mark
+## 1  201921323     Ava Smith    2     ST101  201921323         78
+## 2  202003219 Charlie Jones    1     ST101  202003219         47
+## 3  201985603    Emily Wood    1     ST101  201985603         60</code></pre>
+<p>Note that:</p>
+<ul>
+<li>We write <code>JOIN</code> instead of <code>INNER JOIN</code> as by default <code>INNER JOIN</code> is used when you do not specify the join type.</li>
+<li>The <code>ON</code> keyword specifies on what condition you want to join the tables.</li>
+<li>If you look at the result, <code>student_id</code> appears twice - this is because all the columns from both tables are returned.</li>
+<li>By using the <code>JOIN</code> clause, we separate the logic of combining the tables (<code>Student.student_id = Grade.student_id</code>) and the other condition (<code>course_id = &#39;ST101&#39;</code>), which makes the SQL query more readable.</li>
+</ul>
+<p>Instead of joining using <code>ON</code>, we can use <code>USING</code> with <code>JOIN</code> if the columns that we are joining have the same name. For example:</p>
+<div class="sourceCode" id="cb70"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a><span class="co"># &#39;JOIN&#39; clause using &#39;USING&#39;</span></span>
+<span id="cb70-2"><a href="#cb70-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dbGetQuery</span>(conn, <span class="st">&quot;SELECT *</span></span>
+<span id="cb70-3"><a href="#cb70-3" aria-hidden="true" tabindex="-1"></a><span class="st">                  FROM Student JOIN Grade USING (student_id)</span></span>
+<span id="cb70-4"><a href="#cb70-4" aria-hidden="true" tabindex="-1"></a><span class="st">                  WHERE course_id = &#39;ST101&#39;</span></span>
+<span id="cb70-5"><a href="#cb70-5" aria-hidden="true" tabindex="-1"></a><span class="st">                  ORDER BY Student.name&quot;</span>)</span></code></pre></div>
+<pre><code>##   student_id          name year course_id final_mark
+## 1  201921323     Ava Smith    2     ST101         78
+## 2  202003219 Charlie Jones    1     ST101         47
+## 3  201985603    Emily Wood    1     ST101         60</code></pre>
+<p>Note that:</p>
+<ul>
+<li>The <code>USING</code> keyword specifies which column is used to select rows that have matching values in both tables.</li>
+<li>If you look at the result, <code>student_id</code> appears only once now.</li>
+</ul>
+</div>
+<div id="natural-join" class="section level2">
+<h2><code>NATURAL JOIN</code></h2>
+<div class="sourceCode" id="cb72"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a><span class="co"># using &#39;NATURAL JOIN&#39;</span></span>
+<span id="cb72-2"><a href="#cb72-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dbGetQuery</span>(conn, <span class="st">&quot;SELECT *</span></span>
+<span id="cb72-3"><a href="#cb72-3" aria-hidden="true" tabindex="-1"></a><span class="st">                  FROM Student NATURAL JOIN Grade</span></span>
+<span id="cb72-4"><a href="#cb72-4" aria-hidden="true" tabindex="-1"></a><span class="st">                  WHERE course_id = &#39;ST101&#39;</span></span>
+<span id="cb72-5"><a href="#cb72-5" aria-hidden="true" tabindex="-1"></a><span class="st">                  ORDER BY Student.name&quot;</span>)</span></code></pre></div>
+<pre><code>##   student_id          name year course_id final_mark
+## 1  201921323     Ava Smith    2     ST101         78
+## 2  202003219 Charlie Jones    1     ST101         47
+## 3  201985603    Emily Wood    1     ST101         60</code></pre>
+<p>Note that:</p>
+<ul>
+<li>We do not specify how to join the two tables. The join condition is automatically identified.</li>
+<li>If you look at the result, <code>student_id</code> appears only once.</li>
+</ul>
+</div>
+<div id="left-join" class="section level2">
+<h2><code>LEFT JOIN</code></h2>
+<p>When we run the following <code>SQL</code> commands to use <code>INNER JOIN</code> to combine the tables <code>Student</code> and <code>Grade</code></p>
+<div class="sourceCode" id="cb74"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true" tabindex="-1"></a><span class="co"># use &#39;INNER JOIN&#39; to join tables</span></span>
+<span id="cb74-2"><a href="#cb74-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dbGetQuery</span>(conn, <span class="st">&quot;SELECT *</span></span>
+<span id="cb74-3"><a href="#cb74-3" aria-hidden="true" tabindex="-1"></a><span class="st">                  FROM Student INNER JOIN Grade USING (student_id)</span></span>
+<span id="cb74-4"><a href="#cb74-4" aria-hidden="true" tabindex="-1"></a><span class="st">                  ORDER BY Student.name&quot;</span>)</span></code></pre></div>
+<pre><code>##   student_id           name year course_id final_mark
+## 1  201921323      Ava Smith    2     ST101         78
+## 2  201921323      Ava Smith    2     ST115         92
+## 3  202003219  Charlie Jones    1     ST101         47
+## 4  202003219  Charlie Jones    1     ST115         67
+## 5  201985603     Emily Wood    1     ST101         60
+## 6  201933222 Freddie Harris    2     ST115         88
+## 7  201933222 Freddie Harris    2     ST207         73
+## 8  201875940   Grace Clarke    2     ST207         60</code></pre>
+<p>the record of students Ben Johnson and Dan Norris are not shown, because there are not corresponding records for these two students in the table <code>Grade</code>. If we instead use <code>LEFT OUTER JOIN</code> to combine the tables <code>Student</code> and <code>Grade</code>:</p>
+<div class="sourceCode" id="cb76"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true" tabindex="-1"></a><span class="co"># use &#39;LEFT OUTER JOIN&#39; to join tables</span></span>
+<span id="cb76-2"><a href="#cb76-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dbGetQuery</span>(conn, <span class="st">&quot;SELECT *</span></span>
+<span id="cb76-3"><a href="#cb76-3" aria-hidden="true" tabindex="-1"></a><span class="st">                  FROM Student LEFT JOIN Grade USING (student_id)</span></span>
+<span id="cb76-4"><a href="#cb76-4" aria-hidden="true" tabindex="-1"></a><span class="st">                  ORDER BY Student.name&quot;</span>)</span></code></pre></div>
+<pre><code>##    student_id           name year course_id final_mark
+## 1   202045234     Dan Norris    1      &lt;NA&gt;         NA
+## 2   201921323      Ava Smith    2     ST101         78
+## 3   201921323      Ava Smith    2     ST115         92
+## 4   201832220    Ben Johnson    3      &lt;NA&gt;         NA
+## 5   202003219  Charlie Jones    1     ST101         47
+## 6   202003219  Charlie Jones    1     ST115         67
+## 7   201985603     Emily Wood    1     ST101         60
+## 8   201933222 Freddie Harris    2     ST115         88
+## 9   201933222 Freddie Harris    2     ST207         73
+## 10  201875940   Grace Clarke    2     ST207         60</code></pre>
 </div>
 </div>
 <div id="useful-links-and-resources" class="section level1">
