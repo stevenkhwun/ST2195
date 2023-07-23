@@ -1,5 +1,5 @@
 ---
-title: "Creating and Manipulating Databases in `R` Using `DBI`"
+title: "Creating, Manipulating and Querying Databases in `R` Using `DBI` and `dplyr`"
 date: "`r Sys.Date()`"
 author: Steven Wun
 output:
@@ -513,11 +513,162 @@ dbGetQuery(conn, "SELECT *
 we get 56 rows, which is number of rows in `Student` (7) times number of rows in `Grade` (8).
 
 
+# Querying Databases in `R` Using `dplyr`
+
+## Introduction to dplyr
+
+`dplyr` is an `R` package for data manipulation. It provides a set of functions, named as verbs, that can be used to carry out a wide range of data manipulation operations:
+
+*   The `mutate()` function adds new variables that are transformations of existing variables.
+*   The `select()` function picks variables based on their names.
+*   The `filter()` function picks cases based on their values.
+*   The `summarize()` function reduces multiple values down to a single summary.
+*   The `arrange()` function changes the ordering of the rows.
+
+`dplyr` verbs operate on data frames, but they also, almost seamlessly apply to database tables! In particular `dplyr` allows you to use database tables as if they are data frames, by internally converting `dplyr` code into `SQL` commands using `dbplyr`. The following table compares the syntax used in `SQL` with `dplyr` syntax:
+
+| Action         | `SQL`                                          | `dplyr`  |  
+| -------------- | ---------------------------------------------- | ---------|
+| select a column| SELECT                                         | select   |
+| select a row   | WHERE                                          | filter   |
+| sort           | ORDER BY                                       | arrange  |
+| group          | GROUP BY                                       | group_by |
+| aggregation    | aggregation functions (e.g. `AVG()`) in SELECT | summarize|
+
+See the [SQL Transalation](https://dbplyr.tidyverse.org/articles/sql-translation.html) article in `dbplyr`'s pages for more information.
+
+## Pipe Operator
+
+All of the `dplyr` functions take a data frame (or a [`tibble`](https://tibble.tidyverse.org/)) as the first argument. In this way, the `%>%` operator from the `magrittr` `R` package can be used, so that user does not need to save intermediate objects or nest verbs. For example, the statement `x %>% f(y)` is equivalent to `f(x, y)`, and the result from one step is “piped” into the next step. You can think of the pipe operator as “then.”
+
+## Querying Databases Using `dplyr`
+
+### Connecting to the Database
+
+We should have connected to the database `university.db`. If not, connect to the database by the method as mentioned above. In the meantime, let us see all the three tables `student`, `course` and `grade` in the database `university.db`.
+
+```{r}
+# list all the tables in university.db
+dbListTables(conn)
+```
+
+### Creating a Reference to Table
+
+```{r message=FALSE}
+# creating a reference to table
+library(dplyr)
+student_db <- tbl(conn, "Student")
+grade_db <- tbl(conn, "Grade")
+course_db <- tbl(conn, "Course")
+```
+
+By creating references to the tables as done above, we can treat `student_db`, `grade_db`, and `course_db` as data frames, and use `dplyr` functionality to query the database.
+
+### Getting Grades of the Course using `filter()`
+
+```{r}
+# getting grades of the course using filter()
+q1 <- grade_db %>% filter(course_id == "ST101")
+q1
+```
+
+The function `filter()` selects the rows in the `grade_db` which satisfy the condition `course_id == "ST101"`.
+<br>
+
+We can use the function `show_query()` to show the `SQL` query that `dbplyr` produced, when we run the code above:
+
+```{r}
+# show the SQL query produced
+show_query(q1)
+```
+
+### Getting Names of Stuents in Alphabetic Order
+
+If we want to work on more than one table in `dplyr`, we can use join or set operations. In this example we show how to use `inner_join()`. `arrange()` is then used to order the query result.
+
+```{r message=FALSE}
+# using 'inner_join()' and 'arrange()'
+q2 <- inner_join(student_db, grade_db) %>% 
+  filter(course_id == "ST101") %>% 
+  select(name) %>% 
+  arrange(name)
+q2
+```
+
+The corresponding `SQL` query is:
+
+```{r}
+# show the SQL query produced
+show_query(q2)
+```
+
+### Getting Courses Taken by Ava Smith or Freddie Harris
+
+Here we use `inner_join` to specify which attribute should be used to join by, in this case `course_id`. As both `student_db` and the `course_db` have the attribute `name`, we use the argument `suffix` to rename the attribute `name` to `name.student` and `name.course`, correspondingly. In this way we eliminate ambiguity.
+
+```{r message=FALSE}
+# use the argument 'suffix'
+q3 <- inner_join(student_db, grade_db, by = "student_id") %>% 
+  inner_join(course_db, by = "course_id", suffix = c(".student", ".course")) %>% 
+  filter(name.student == 'Ava Smith' | name.student == 'Freddie Harris') %>% 
+  select(name.course) %>% 
+  distinct()
+q3
+```
+
+The corresponding `SQL` query is:
+
+```{r}
+# show the SQL query produced
+show_query(q3)
+```
+
+Note the computer-generated `SQL` code that `dplyr` created internally is more complicated than the `SQL` code we wrote for the same query.
+
+### Calculating Average Mark for Each Course
+
+The combination of the verbs `group_by()` and `summarize()` are used to calculate the average `final_mark` for each `course_id`.
+
+```{r message=FALSE}
+# use of 'group_by()' and 'summarize()'
+q4 <- grade_db %>% 
+  group_by(course_id) %>% 
+  summarize(avg_mark = mean(final_mark, na.rm = TRUE))
+q4
+```
+
+
+The corresponding `SQL` query is:
+
+```{r}
+# show the SQL query produced
+show_query(q4)
+```
+
+### Disconnecting From the Database
+
+After we finish manipulating the database, we can close the connection using the function `dbDisconnect()` from `DBI`:
+
+```{r}
+# disconnect from the database
+dbDisconnect(conn)
+```
+
 # Useful Links and Resources
 
-* [Using **DBI**](https://solutions.posit.co/connections/db/r-packages/dbi/)
-* [**DBI** reference manual](chrome-extension://efaidnbmnnnibpcajpcglclefindmkaj/https://cran.r-project.org/web/packages/DBI/DBI.pdf)
-* [SQLite join](https://www.sqlitetutorial.net/sqlite-join/) to learn more about how to join tables via SQLite
-* [SQLite select](https://www.sqlitetutorial.net/sqlite-select/) to learn more about how to query via SQLite
-* [SQL](https://en.wikipedia.org/wiki/SQL) from Wikipedia
-* [**RSQLite** vignettes](https://cran.r-project.org/web/packages/RSQLite/vignettes/RSQLite.html)
+* `DBI`
+  * [Using **DBI**](https://solutions.posit.co/connections/db/r-packages/dbi/)
+  * [**DBI** reference manual](chrome-extension://efaidnbmnnnibpcajpcglclefindmkaj/https://cran.r-project.org/web/packages/DBI/DBI.pdf)
+  * [**RSQLite** vignettes](https://cran.r-project.org/web/packages/RSQLite/vignettes/RSQLite.html)
+
+* `SQL` Joins
+  * [SQLite join](https://www.sqlitetutorial.net/sqlite-join/) to learn more about how to join tables via SQLite
+  * [SQLite select](https://www.sqlitetutorial.net/sqlite-select/) to learn more about how to query via SQLite
+  * [SQL](https://en.wikipedia.org/wiki/SQL) from Wikipedia
+  
+* `dplyr`
+  * [Using `dplyr` with databases](https://solutions.posit.co/connections/db/r-packages/dplyr/): A guide on how to use `dplyr` with database from RStudio
+  * [`dplyr` vignettes](https://cran.r-project.org/web/packages/dplyr/vignettes/dplyr.html): A introduction to `dplyr`
+  * [`dbplyr` SQL Translation](https://dbplyr.tidyverse.org/articles/sql-translation.html)
+
+
