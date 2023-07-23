@@ -89,5 +89,150 @@ Name_list <- list(First_name, Last_name)
 Name_list
 ```
 
+We use `lapply()` function to convert the names to lower case:
+
+```{r}
+# convert to lower case
+Names_lower <- lapply(X = Name_list, FUN = tolower)
+Names_lower
+str(Names_lower)
+```
+
+In the above code chunk, we worked with a list of strings containing the first and last name of five people. We used `lapply()` together with the `tolower()` function to convert the names to lower case.
+
+## `sapply()`
+
+The function `sapply()` works in the same way as `lapply()` but simplifies (hence the `s`) the output to return a vector or a matrix.
+
+```{r}
+# create a simple function to raise the input to a chosen power
+raise_power <- function(x, power) {
+  x^power
+}
+```
+
+The followings are examples of using the function.
+
+```{r results='hold'}
+# Examples
+raise_power(x = 2, power = 3)
+raise_power(x = 4, power = 2)
+raise_power(x = 5, power = 4)
+```
+
+```{r}
+# create a simple list containing numbers
+numbers <- list(1:5, 6:10)
+numbers
+# using the 'sapply()' function to raise each element of the numbers vector to the power of 3
+sapply(X = numbers, FUN = raise_power, power = 3)
+```
+
+In the above example, we created a function called `raise_power()` that takes the arguments `x` and `power` and returns `x` raised to `power`.
+<br>
+
+We then created a list called `numbers`, which contains two vectors, and used `sapply()` to apply the `raise_power()` function to each element of `numbers`. We set `power = 3` just after we have specified `X = numbers` and `FUN = raise_power`. The output is a $(5 \times 2)$ matrix, where each column represents the elements of the first and second vectors, respectively, raised to the power of three.
+
+## `mapply()`
+
+The function `mapply()` is the multivariate version of `sapply()`. It applies a function in parallel over a set of arguments.
+
+```{r results='hold'}
+# short demo of rep()
+rep(1, 3)
+rep(2, 3)
+rep(3, 3)
+```
+
+```{r}
+# create a 3x3 matrix
+mat <- matrix(c(rep(1,3), rep(2,3), rep(3,3)), 3, 3)
+mat
+```
+
+```{r}
+# do the same thing via 'mapply()'
+mat1 <- mapply(rep, 1:3, 3)
+mat1
+```
+
+In this example, we created a matrix `mat`, using the `rep()` function thrice. We then create the same matrix `mat1` by using `mapply()`. Basically, `mapply()` applies the `rep()` function to a vector containing the numbers 1 to 3 with additional argument 3 specifying how many times each number should be repeated. Another example is
+
+```{r}
+# repeating 1 time, 4 times and 9 times
+mapply(rep, 1:3, (1:3)^2)
+```
+
+## `sweep()` and `aggregate()`
+
+The `sweep()` and `aggregate()` functions are closely related to the `apply()` family. See their help files and the useful links and resources for more information.
+
+
+# Reshaping Data Sets
+
+`R` provides a variety of methods for reshaping your data before analysis. Base `R` provides the `reshape()` function which, as the help file states reshapes a data frame between “wide” format with repeated measurements in separate columns of the same record, and “long” format with the repeated measurements in separate records. The `reshape2` `R` package provides similar functionality but with a simplified interface. To install the `reshape2` package, type in `install.packages("reshape2")`.
+
+The `reshape2` package makes it easy to transform data between wide and long formats:
+
+*   Wide-format data has a column for each variable
+*   Long-format data has a column for possible variable types and a column for the values for those variables. However, long-format data isn’t necessarily only two columns
+
+As you may have already figured out, you may need wide-format data for some type of analyses and long-format data for others. For example, it is easy to work with `ggplot2` with long-format data. Also, most statistical modelling functions like `lm()`, `glm()` and `gam()` work well with long-format data. However, many people often find wide-format data easier and more intuitive for recording data. Therefore, it is important to be able to work with both and be able to transform data from and into each of these two formats.
+
+`reshape2` has two key functions:
+
+*   `melt()`: Convert wide- to long-format data
+*   `*cast()`: Convert long- to wide-format data
+
+## Wide to Long
+
+To illustrate how to use the `melt()` function in the `reshape2` package, we will consider the built-in `R` dataset `airquality`. This data set consists of daily air quality measurements in New York, from May to September 1973. This data is in wide format because for each data point, we have a column for each variable. In `reshape2`, to convert wide-format data to long-format data, we use the `melt()` function:
+
+```{r warning=FALSE}
+# load the 'reshape2' library
+library("reshape2")
+```
+
+```{r}
+# print out the first few records of the 'airquality' data frame
+head(airquality)
+```
+
+```{r}
+# use the 'melt' function to convert the data into long format
+airquality_long <- melt(airquality)
+```
+
+```{r}
+# print out the first few records of the new 'airquality_long' data frame
+head(airquality_long)
+```
+
+```{r}
+# print out the last few records of the new 'airquality_long' data frame
+tail(airquality_long)
+```
+
+We see now our data is in long-format where we have one column named variable which records the name of the variable and a column named value which records the value of that variable. By default, the `melt()` function assumes that all columns are numeric with numeric values are variables with values. Often, we may want to know specific values and keep them as columns. We can identify these by using the `id.vars` argument. Here we can specify the `ID` variables, which are variables that identify individual rows of the data. Suppose we want to have the month and the day as ID variables:
+
+```{r}
+# use the 'melt' function to convert the data into long format with specifying ID variables Month and Day
+airquality_long <- melt(airquality, id.vars = c('Month', 'Day'))
+head(airquality_long)
+```
+
+We can see that by passing in the `Month` and `Day` variables into the `id.vars` argument, we kept `Month` and `Day` as columns and the rest of the data was converted into long format. We may also wish to control the column names in our long format by passing in the column names for the variable and value into the `variable.name` and `value.name` arguments respectively:
+
+```{r}
+# use the 'melt' function to convert the data into long format with specifying ID variables Month and Day
+airquality_long <- melt(airquality, id.vars = c('Month', 'Day'),
+                        variable.name = 'climate_var',
+                        value.name = 'climate_value')
+head(airquality_long)
+tail(airquality_long)
+```
+
+## Long to Wide
+
 
 

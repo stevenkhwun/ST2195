@@ -209,6 +209,7 @@
 <ul>
 <li><a href="#introduction">Introduction</a></li>
 <li><a href="#apply-functions"><code>*apply</code> Functions</a></li>
+<li><a href="#reshaping-data-sets">Reshaping Data Sets</a></li>
 </ul>
 </div>
 </nav>
@@ -305,6 +306,180 @@
 ## 
 ## [[2]]
 ## [1] &quot;Doe&quot;      &quot;Smith&quot;    &quot;Williams&quot; &quot;Taylor&quot;   &quot;Wilson&quot;</code></pre>
+<p>We use <code>lapply()</code> function to convert the names to lower case:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># convert to lower case</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>Names_lower <span class="ot">&lt;-</span> <span class="fu">lapply</span>(<span class="at">X =</span> Name_list, <span class="at">FUN =</span> tolower)</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>Names_lower</span></code></pre></div>
+<pre><code>## [[1]]
+## [1] &quot;john&quot;    &quot;jane&quot;    &quot;tim&quot;     &quot;michael&quot; &quot;emma&quot;   
+## 
+## [[2]]
+## [1] &quot;doe&quot;      &quot;smith&quot;    &quot;williams&quot; &quot;taylor&quot;   &quot;wilson&quot;</code></pre>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(Names_lower)</span></code></pre></div>
+<pre><code>## List of 2
+##  $ : chr [1:5] &quot;john&quot; &quot;jane&quot; &quot;tim&quot; &quot;michael&quot; ...
+##  $ : chr [1:5] &quot;doe&quot; &quot;smith&quot; &quot;williams&quot; &quot;taylor&quot; ...</code></pre>
+<p>In the above code chunk, we worked with a list of strings containing the first and last name of five people. We used <code>lapply()</code> together with the <code>tolower()</code> function to convert the names to lower case.</p>
+</div>
+<div id="sapply" class="section level2">
+<h2><code>sapply()</code></h2>
+<p>The function <code>sapply()</code> works in the same way as <code>lapply()</code> but simplifies (hence the <code>s</code>) the output to return a vector or a matrix.</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># create a simple function to raise the input to a chosen power</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>raise_power <span class="ot">&lt;-</span> <span class="cf">function</span>(x, power) {</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  x<span class="sc">^</span>power</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>The followings are examples of using the function.</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Examples</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="fu">raise_power</span>(<span class="at">x =</span> <span class="dv">2</span>, <span class="at">power =</span> <span class="dv">3</span>)</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="fu">raise_power</span>(<span class="at">x =</span> <span class="dv">4</span>, <span class="at">power =</span> <span class="dv">2</span>)</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="fu">raise_power</span>(<span class="at">x =</span> <span class="dv">5</span>, <span class="at">power =</span> <span class="dv">4</span>)</span></code></pre></div>
+<pre><code>## [1] 8
+## [1] 16
+## [1] 625</code></pre>
+<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># create a simple list containing numbers</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>numbers <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>, <span class="dv">6</span><span class="sc">:</span><span class="dv">10</span>)</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>numbers</span></code></pre></div>
+<pre><code>## [[1]]
+## [1] 1 2 3 4 5
+## 
+## [[2]]
+## [1]  6  7  8  9 10</code></pre>
+<div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># using the &#39;sapply()&#39; function to raise each element of the numbers vector to the power of 3</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sapply</span>(<span class="at">X =</span> numbers, <span class="at">FUN =</span> raise_power, <span class="at">power =</span> <span class="dv">3</span>)</span></code></pre></div>
+<pre><code>##      [,1] [,2]
+## [1,]    1  216
+## [2,]    8  343
+## [3,]   27  512
+## [4,]   64  729
+## [5,]  125 1000</code></pre>
+<p>In the above example, we created a function called <code>raise_power()</code> that takes the arguments <code>x</code> and <code>power</code> and returns <code>x</code> raised to <code>power</code>. <br></p>
+<p>We then created a list called <code>numbers</code>, which contains two vectors, and used <code>sapply()</code> to apply the <code>raise_power()</code> function to each element of <code>numbers</code>. We set <code>power = 3</code> just after we have specified <code>X = numbers</code> and <code>FUN = raise_power</code>. The output is a <span class="math inline">\((5 \times 2)\)</span> matrix, where each column represents the elements of the first and second vectors, respectively, raised to the power of three.</p>
+</div>
+<div id="mapply" class="section level2">
+<h2><code>mapply()</code></h2>
+<p>The function <code>mapply()</code> is the multivariate version of <code>sapply()</code>. It applies a function in parallel over a set of arguments.</p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># short demo of rep()</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="fu">rep</span>(<span class="dv">1</span>, <span class="dv">3</span>)</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a><span class="fu">rep</span>(<span class="dv">2</span>, <span class="dv">3</span>)</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="fu">rep</span>(<span class="dv">3</span>, <span class="dv">3</span>)</span></code></pre></div>
+<pre><code>## [1] 1 1 1
+## [1] 2 2 2
+## [1] 3 3 3</code></pre>
+<div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co"># create a 3x3 matrix</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>mat <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="fu">c</span>(<span class="fu">rep</span>(<span class="dv">1</span>,<span class="dv">3</span>), <span class="fu">rep</span>(<span class="dv">2</span>,<span class="dv">3</span>), <span class="fu">rep</span>(<span class="dv">3</span>,<span class="dv">3</span>)), <span class="dv">3</span>, <span class="dv">3</span>)</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>mat</span></code></pre></div>
+<pre><code>##      [,1] [,2] [,3]
+## [1,]    1    2    3
+## [2,]    1    2    3
+## [3,]    1    2    3</code></pre>
+<div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co"># do the same thing via &#39;mapply()&#39;</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>mat1 <span class="ot">&lt;-</span> <span class="fu">mapply</span>(rep, <span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>, <span class="dv">3</span>)</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>mat1</span></code></pre></div>
+<pre><code>##      [,1] [,2] [,3]
+## [1,]    1    2    3
+## [2,]    1    2    3
+## [3,]    1    2    3</code></pre>
+<p>In this example, we created a matrix <code>mat</code>, using the <code>rep()</code> function thrice. We then create the same matrix <code>mat1</code> by using <code>mapply()</code>. Basically, <code>mapply()</code> applies the <code>rep()</code> function to a vector containing the numbers 1 to 3 with additional argument 3 specifying how many times each number should be repeated. Another example is</p>
+<div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="co"># repeating 1 time, 4 times and 9 times</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="fu">mapply</span>(rep, <span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>, (<span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>)<span class="sc">^</span><span class="dv">2</span>)</span></code></pre></div>
+<pre><code>## [[1]]
+## [1] 1
+## 
+## [[2]]
+## [1] 2 2 2 2
+## 
+## [[3]]
+## [1] 3 3 3 3 3 3 3 3 3</code></pre>
+</div>
+<div id="sweep-and-aggregate" class="section level2">
+<h2><code>sweep()</code> and <code>aggregate()</code></h2>
+<p>The <code>sweep()</code> and <code>aggregate()</code> functions are closely related to the <code>apply()</code> family. See their help files and the useful links and resources for more information.</p>
+</div>
+</div>
+<div id="reshaping-data-sets" class="section level1">
+<h1>Reshaping Data Sets</h1>
+<p><code>R</code> provides a variety of methods for reshaping your data before analysis. Base <code>R</code> provides the <code>reshape()</code> function which, as the help file states reshapes a data frame between “wide” format with repeated measurements in separate columns of the same record, and “long” format with the repeated measurements in separate records. The <code>reshape2</code> <code>R</code> package provides similar functionality but with a simplified interface. To install the <code>reshape2</code> package, type in <code>install.packages(&quot;reshape2&quot;)</code>.</p>
+<p>The <code>reshape2</code> package makes it easy to transform data between wide and long formats:</p>
+<ul>
+<li>Wide-format data has a column for each variable</li>
+<li>Long-format data has a column for possible variable types and a column for the values for those variables. However, long-format data isn’t necessarily only two columns</li>
+</ul>
+<p>As you may have already figured out, you may need wide-format data for some type of analyses and long-format data for others. For example, it is easy to work with <code>ggplot2</code> with long-format data. Also, most statistical modelling functions like <code>lm()</code>, <code>glm()</code> and <code>gam()</code> work well with long-format data. However, many people often find wide-format data easier and more intuitive for recording data. Therefore, it is important to be able to work with both and be able to transform data from and into each of these two formats.</p>
+<p><code>reshape2</code> has two key functions:</p>
+<ul>
+<li><code>melt()</code>: Convert wide- to long-format data</li>
+<li><code>*cast()</code>: Convert long- to wide-format data</li>
+</ul>
+<div id="wide-to-long" class="section level2">
+<h2>Wide to Long</h2>
+<p>To illustrate how to use the <code>melt()</code> function in the <code>reshape2</code> package, we will consider the built-in <code>R</code> dataset <code>airquality</code>. This data set consists of daily air quality measurements in New York, from May to September 1973. This data is in wide format because for each data point, we have a column for each variable. In <code>reshape2</code>, to convert wide-format data to long-format data, we use the <code>melt()</code> function:</p>
+<div class="sourceCode" id="cb32"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="co"># load the &#39;reshape2&#39; library</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">&quot;reshape2&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb33"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="co"># print out the first few records of the &#39;airquality&#39; data frame</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(airquality)</span></code></pre></div>
+<pre><code>##   Ozone Solar.R Wind Temp Month Day
+## 1    41     190  7.4   67     5   1
+## 2    36     118  8.0   72     5   2
+## 3    12     149 12.6   74     5   3
+## 4    18     313 11.5   62     5   4
+## 5    NA      NA 14.3   56     5   5
+## 6    28      NA 14.9   66     5   6</code></pre>
+<div class="sourceCode" id="cb35"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="co"># use the &#39;melt&#39; function to convert the data into long format</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>airquality_long <span class="ot">&lt;-</span> <span class="fu">melt</span>(airquality)</span></code></pre></div>
+<pre><code>## No id variables; using all as measure variables</code></pre>
+<div class="sourceCode" id="cb37"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="co"># print out the first few records of the new &#39;airquality_long&#39; data frame</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(airquality_long)</span></code></pre></div>
+<pre><code>##   variable value
+## 1    Ozone    41
+## 2    Ozone    36
+## 3    Ozone    12
+## 4    Ozone    18
+## 5    Ozone    NA
+## 6    Ozone    28</code></pre>
+<div class="sourceCode" id="cb39"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="co"># print out the last few records of the new &#39;airquality_long&#39; data frame</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="fu">tail</span>(airquality_long)</span></code></pre></div>
+<pre><code>##     variable value
+## 913      Day    25
+## 914      Day    26
+## 915      Day    27
+## 916      Day    28
+## 917      Day    29
+## 918      Day    30</code></pre>
+<p>We see now our data is in long-format where we have one column named variable which records the name of the variable and a column named value which records the value of that variable. By default, the <code>melt()</code> function assumes that all columns are numeric with numeric values are variables with values. Often, we may want to know specific values and keep them as columns. We can identify these by using the <code>id.vars</code> argument. Here we can specify the <code>ID</code> variables, which are variables that identify individual rows of the data. Suppose we want to have the month and the day as ID variables:</p>
+<div class="sourceCode" id="cb41"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="co"># use the &#39;melt&#39; function to convert the data into long format with specifying ID variables Month and Day</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>airquality_long <span class="ot">&lt;-</span> <span class="fu">melt</span>(airquality, <span class="at">id.vars =</span> <span class="fu">c</span>(<span class="st">&#39;Month&#39;</span>, <span class="st">&#39;Day&#39;</span>))</span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(airquality_long)</span></code></pre></div>
+<pre><code>##   Month Day variable value
+## 1     5   1    Ozone    41
+## 2     5   2    Ozone    36
+## 3     5   3    Ozone    12
+## 4     5   4    Ozone    18
+## 5     5   5    Ozone    NA
+## 6     5   6    Ozone    28</code></pre>
+<p>We can see that by passing in the <code>Month</code> and <code>Day</code> variables into the <code>id.vars</code> argument, we kept <code>Month</code> and <code>Day</code> as columns and the rest of the data was converted into long format. We may also wish to control the column names in our long format by passing in the column names for the variable and value into the <code>variable.name</code> and <code>value.name</code> arguments respectively:</p>
+<div class="sourceCode" id="cb43"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="co"># use the &#39;melt&#39; function to convert the data into long format with specifying ID variables Month and Day</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>airquality_long <span class="ot">&lt;-</span> <span class="fu">melt</span>(airquality, <span class="at">id.vars =</span> <span class="fu">c</span>(<span class="st">&#39;Month&#39;</span>, <span class="st">&#39;Day&#39;</span>),</span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>                        <span class="at">variable.name =</span> <span class="st">&#39;climate_var&#39;</span>,</span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>                        <span class="at">value.name =</span> <span class="st">&#39;climate_value&#39;</span>)</span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(airquality_long)</span></code></pre></div>
+<pre><code>##   Month Day climate_var climate_value
+## 1     5   1       Ozone            41
+## 2     5   2       Ozone            36
+## 3     5   3       Ozone            12
+## 4     5   4       Ozone            18
+## 5     5   5       Ozone            NA
+## 6     5   6       Ozone            28</code></pre>
+<div class="sourceCode" id="cb45"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tail</span>(airquality_long)</span></code></pre></div>
+<pre><code>##     Month Day climate_var climate_value
+## 607     9  25        Temp            63
+## 608     9  26        Temp            70
+## 609     9  27        Temp            77
+## 610     9  28        Temp            75
+## 611     9  29        Temp            76
+## 612     9  30        Temp            68</code></pre>
+</div>
+<div id="long-to-wide" class="section level2">
+<h2>Long to Wide</h2>
 </div>
 </div>
 </div>
