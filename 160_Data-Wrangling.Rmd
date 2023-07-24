@@ -234,5 +234,245 @@ tail(airquality_long)
 
 ## Long to Wide
 
+Going from long to wide format can take a bit more thought than going from wide- to long-format data. In `reshape2`, there are multiple `cast` functions. To work with data frames, we use the `dcast()` function — there are also the `acast()` function to return a vector, matrix or array. To illustrate how to use the `dcast()` function, we work with the `airquality_long` data frame we created earlier.
+
+The `dcast()` function uses a formula to describe the shape of the data. In this function we need to tell `dcast()` what are `ID` variables and what is the variable column that describes the measured variables. `dcast()` will use the last remaining column as the column that contains the values by default, but we can also pass this into the `value.var` argument. We can print this out and see that we can recover the original `airquality` data frame (but with the columns in different order):
+
+```{r}
+# use the 'dcast' function to convert the data back into wide format
+airquality_wide <- dcast(airquality_long,
+                         formula = Month + Day ~ climate_var,
+                         value.var = 'climate_value')
+head(airquality_wide)
+```
+
+A common problem users may face is when you cast a data set where there is more than one value per data cell. For instance, consider only using `Month` as an `ID` variable:
+
+```{r}
+# use the 'dcast' function to convert the data back into wide format
+airquality_wide <- dcast(airquality_long,
+                         formula = Month ~ climate_var,
+                         value.var = 'climate_value')
+head(airquality_wide)
+```
+
+Here we got the warning: “Aggregation function missing: defaulting to length.” By only using `Month` as the `ID` variable, we can see here that the cells are now filled with the number of data rows for each month. This is because we did not pass an aggregation function into the `fun.aggregate` argument which tells R how to aggregate the data.
+
+If you cast your data and there are multiple values per cell, you will also need to tell `dcast()` how to aggregate the data. Depending on the aim of the analysis, we can use a range of scalar summaries, like the `mean()`, `median()`, `sum()`, etc. Here, we take the mean using the `mean()` function and we also use `na.rm = TRUE` to remove the `NA` values:
+
+```{r}
+# use the 'dcast' function to convert the data back into wide format
+airquality_wide <- dcast(airquality_long,
+                         formula = Month ~ climate_var,
+                         value.var = 'climate_value',
+                         fun.aggregate = mean,
+                         na.rm = TRUE)
+airquality_wide
+```
+
+We see here that we now obtained the mean value of the variables for each month.
+
+## `tidyr` Package
+
+There is also another popular package for data reshaping and more general data tidying, called `tidyr`. `tidyr` provides functionality for:
+
+*   Pivoting data (i.e. reshaping);
+*   Rectangling data (e.g. turning deeply nested lists into rectangular data);
+*   Nesting and unnesting (e.g. converting grouped data to a few where each group becomes a single row with a nested data frame, and the reverse);
+*   Splitting and combining character columns (e.g. pulling a single character column into multiple columns);
+*   Making implicit missing values explicit and vice versa;
+
+Useful Links and Resources, below, provides some links of the basic functionality from `tidyr`.
+
+# Stacking
+
+The `stack()` and `unstack()` functions in `R` are handy when working with data frames. Applying `stack()` to a data frame simply stacks the columns vectors on top of each other to form a single vector along with a factor indicating where each observation came from. As expected, the `unstack()` function does the complete opposite.
+<br>
+
+Below is a demonstration using the built-in `PlantGrowth` dataset. The dataset contains the weights of 30 plants from 3 different groups, namely `ctrl` (control), `trt1` (treatment 1) and `trt2` (treatment 2). Because of the way `stack()` works, we first convert the group variable from `factor` to `character` to avoid getting a warning message.
+
+```{r}
+# use the built-in 'PlantGrowth' dataset
+head(PlantGrowth)
+# converting group variable from factor to character
+PlantGrowth$group <- as.character(PlantGrowth$group)
+# stacking
+stack(PlantGrowth)
+# unstacking
+unstack(PlantGrowth)
+```
+
+Check the help file of `stack()` for more options and examples.
+
+# Subsetting
+
+`R` has some powerful indexing features that allows you to quickly access object elements. In this subsection, we will learn how to efficiently select or exclude particular elements in vectors or data frames.
+
+## Subsetting Vectors
+
+Consider a simple numeric vector:
+
+```{r eval=FALSE}
+x <- c(1.4, 5.6, 7.8, 2.6)
+```
+
+The three ways in which we can subset elements of a vector in `R` are:
+
+*   Using positive integers: We use a vector of positive integers to specify the index of the elements we want to return / keep.
+*   Using negative integers: We use a vector of negative integers to specify the index of the elements we want to exclude.
+*   Using logical vectors: We use a vector of logical values where elements are selected if the corresponding logical value is `TRUE`.
+
+```{r}
+# define x
+x <- c(1.4, 5.6, 7.8, 2.6)
+x
+# select the 2nd and 4th element
+x[c(2,4)]
+# exclude the 2nd and 4th element
+x[-c(2,4)]
+# select the 2nd and 4th element
+x[c(FALSE, TRUE, FALSE, TRUE)]
+# select the elements that are strictly greater than 5
+x[x > 5]
+```
+
+By running the above code, we can see that a very useful way to subset vectors is by using logical vectors. In the last line, we first evaluated the conditional statement `x > 5` and then we used the result to subset `x`.
+
+## Subsetting Data Frames
+
+The most basic way of subsetting a data frame in R is using square brackets `[ ]`:
+
+```{r eval=FALSE}
+dataframe[x, y]
+```
+
+where `dataframe` is a data frame in `R`, `x` is the rows that we want to be returned, and `y` is a vector of the columns that we want returned.
+
+```{r}
+# create dataframe
+dataframe <- data.frame(v1 = 1:5, v2 = 6:10, v3 = 11:15)
+dataframe
+# select the first 3 rows
+dataframe[1:3, ]
+# exclude the first 3 rows
+dataframe[-(1:3), ]
+# select the first 3 rows and first 2 columns
+dataframe[1:3, 1:2]
+# select the rows using a logical vector (condition: if the variable v3 is divisible by 3)
+dataframe[dataframe$v3 %% 3 == 0, ]
+# select columns v1 and v3
+dataframe[, c("v1", "v3")]
+# select columns v1 and v3 (alternative)
+dataframe[c("v1", "v3")]
+```
+
+As we have seen in “Data Structures in R,” we can also subset the rows of a data frame using the `subset()` function.
+
+# `dplyr` Verbs
+
+One of the most useful packages to manipulate data is `dplyr`. This package contains the so-called `dplyr` verbs:
+
+*   `mutate()`: Adds new variables that are functions of existing variables
+*   `select()`: Picks variables based on their names.
+*   `filter()`: Picks cases based on their values.
+*   `summarize()`: Reduces multiple values down to a single summary.
+*   `arrange()`: Changes the ordering of the rows.
+
+When working with `dplyr` verbs, we typically want to use the result of a verb applied to a data frame as input for another verb. In such cases, it is more intuitive to use the pipe `%>%` operator from the [`magrittr`](https://cran.r-project.org/web/packages/magrittr/index.html) `R` package to chain operations. The `magrittr` package is loaded automatically when `dplyr` is loaded.
+
+The variable to the left of `%>%` operator is passed as the first argument to the function on the right of the `%>%` operator.
+
+We have already encountered some of the those verbs and functionality when working with databases in `R`. Here, we take a more in-depth view of `dplyr`’s functionality.
+
+Throughout this section, we use the `mtcars` data set to illustrate the capabilities of the `dplyr` verbs. Here is a preview of the dataset and its structure:
+
+```{r}
+# preview the 'mtcars' data set
+head(mtcars)
+str(mtcars)
+```
+
+## `mutate()`
+
+The variable `mpg` stands for miles per gallon. Suppose we want to add another variable called `kpg` which stands for kilometres per gallon. We know that 1 mile is approximately equal to 1.61 kilometres. We can use `mutate()` to add the variable `kpg`:
+
+```{r message=FALSE}
+# loading the 'dplyr package
+library(dplyr)
+```
+
+```{r}
+# adding 'kpg'
+mtcars1 <- mutate(mtcars, kpg = 1.61 * mpg)
+head(mtcars1)
+# alternative approach using the pipe '%>%' operator
+mtcars2 <- mtcars %>% mutate(kpg = 1.61 * mpg)
+head(mtcars2)
+# mtcars1 is identical to mtcars2
+identical(mtcars1, mtcars2)
+```
+
+Note that the shortcut for the pipe operator `%>%` is pressing `Shift` `Ctrl` and `M` together.
+
+## `select()`
+
+Suppose we only want to select the `mpg`, `cyl`, `hp`, `vs` and `gear` columns. We can use the `select()` verb to do so.
+
+```{r}
+# select columns
+mtcars %>% 
+  select(mpg, cyl, hp, vs, gear)
+```
+
+## `filter()`
+
+We can use the `filter()` function to get only observations that match a condition (or multiple conditions). `filter()` is the `dplyr` equivalent to `subset()`, and allows us to write more intuitive code.
+
+```{r}
+# get observations where 'gear' is equal to 4 and 'disp' is less than 80
+mtcars %>% filter(gear == 4, disp < 80)
+# this is equivalent to
+subset(mtcars, gear == 4 & disp < 80)
+```
+
+## `arrange()`
+
+We can arrange our observations in any convenient way using the `arrange()` function:
+
+```{r}
+# arrange 'mtcars' in ascending order of 'mpg'
+mtcars %>% 
+  arrange(mpg) %>% 
+  head()
+# arrange 'mtcars' in descending order of 'disp'
+mtcars %>% 
+  arrange(desc(disp)) %>% 
+  head()
+```
+
+## `summarize()`
+
+We can compute several summaries using the `summarize()` function. For example, if we want to calculate the maximum `mpg` value, the minimum `disp` value, and the mean of `qsec` in `mtcars` we do:
+
+```{r}
+# compute summaries
+mtcars %>% 
+  summarize(maximum_mpg = max(mpg),
+            minimum_disp = min(disp),
+            average_qsec = mean(qsec))
+```
+
+`summarize()` combines well with the `group_by()` function. For example,
+
+```{r}
+# 'summarize()' and 'group_by()' functions
+iris %>% 
+  group_by(Species) %>% 
+  summarize(Avg_Sepal_Length = mean(Sepal.Length),
+            Avg_Sepal_Width = mean(Sepal.Width),
+            Avg_Petal_Length = mean(Petal.Length),
+            Avg_Petal_Width = mean(Petal.Width))
+```
+
 
 

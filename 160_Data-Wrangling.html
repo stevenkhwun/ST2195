@@ -7,7 +7,7 @@
 
         <meta name="author" content="Steven Wun" />
     
-        <meta name="date" content="2023-07-23" />
+        <meta name="date" content="2023-07-24" />
     
     <title>Data Wrangling Operations in R</title>
     <!-- Material Design fonts -->
@@ -194,7 +194,7 @@
 	  	  <div id="header">
 	    <h1 class="title">Data Wrangling Operations in <code>R</code></h1>
 	    	    	    	    <h4 class="author">Steven Wun</h4>
-	    	    	    	    <h4 class="date">2023-07-23</h4>
+	    	    	    	    <h4 class="date">2023-07-24</h4>
 	    	  </div>
 	  	</div>
       </div>
@@ -210,6 +210,9 @@
 <li><a href="#introduction">Introduction</a></li>
 <li><a href="#apply-functions"><code>*apply</code> Functions</a></li>
 <li><a href="#reshaping-data-sets">Reshaping Data Sets</a></li>
+<li><a href="#stacking">Stacking</a></li>
+<li><a href="#subsetting">Subsetting</a></li>
+<li><a href="#dplyr-verbs"><code>dplyr</code> Verbs</a></li>
 </ul>
 </div>
 </nav>
@@ -480,6 +483,416 @@
 </div>
 <div id="long-to-wide" class="section level2">
 <h2>Long to Wide</h2>
+<p>Going from long to wide format can take a bit more thought than going from wide- to long-format data. In <code>reshape2</code>, there are multiple <code>cast</code> functions. To work with data frames, we use the <code>dcast()</code> function — there are also the <code>acast()</code> function to return a vector, matrix or array. To illustrate how to use the <code>dcast()</code> function, we work with the <code>airquality_long</code> data frame we created earlier.</p>
+<p>The <code>dcast()</code> function uses a formula to describe the shape of the data. In this function we need to tell <code>dcast()</code> what are <code>ID</code> variables and what is the variable column that describes the measured variables. <code>dcast()</code> will use the last remaining column as the column that contains the values by default, but we can also pass this into the <code>value.var</code> argument. We can print this out and see that we can recover the original <code>airquality</code> data frame (but with the columns in different order):</p>
+<div class="sourceCode" id="cb47"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="co"># use the &#39;dcast&#39; function to convert the data back into wide format</span></span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>airquality_wide <span class="ot">&lt;-</span> <span class="fu">dcast</span>(airquality_long,</span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a>                         <span class="at">formula =</span> Month <span class="sc">+</span> Day <span class="sc">~</span> climate_var,</span>
+<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a>                         <span class="at">value.var =</span> <span class="st">&#39;climate_value&#39;</span>)</span>
+<span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(airquality_wide)</span></code></pre></div>
+<pre><code>##   Month Day Ozone Solar.R Wind Temp
+## 1     5   1    41     190  7.4   67
+## 2     5   2    36     118  8.0   72
+## 3     5   3    12     149 12.6   74
+## 4     5   4    18     313 11.5   62
+## 5     5   5    NA      NA 14.3   56
+## 6     5   6    28      NA 14.9   66</code></pre>
+<p>A common problem users may face is when you cast a data set where there is more than one value per data cell. For instance, consider only using <code>Month</code> as an <code>ID</code> variable:</p>
+<div class="sourceCode" id="cb49"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="co"># use the &#39;dcast&#39; function to convert the data back into wide format</span></span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>airquality_wide <span class="ot">&lt;-</span> <span class="fu">dcast</span>(airquality_long,</span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a>                         <span class="at">formula =</span> Month <span class="sc">~</span> climate_var,</span>
+<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a>                         <span class="at">value.var =</span> <span class="st">&#39;climate_value&#39;</span>)</span></code></pre></div>
+<pre><code>## Aggregation function missing: defaulting to length</code></pre>
+<div class="sourceCode" id="cb51"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(airquality_wide)</span></code></pre></div>
+<pre><code>##   Month Ozone Solar.R Wind Temp
+## 1     5    31      31   31   31
+## 2     6    30      30   30   30
+## 3     7    31      31   31   31
+## 4     8    31      31   31   31
+## 5     9    30      30   30   30</code></pre>
+<p>Here we got the warning: “Aggregation function missing: defaulting to length.” By only using <code>Month</code> as the <code>ID</code> variable, we can see here that the cells are now filled with the number of data rows for each month. This is because we did not pass an aggregation function into the <code>fun.aggregate</code> argument which tells R how to aggregate the data.</p>
+<p>If you cast your data and there are multiple values per cell, you will also need to tell <code>dcast()</code> how to aggregate the data. Depending on the aim of the analysis, we can use a range of scalar summaries, like the <code>mean()</code>, <code>median()</code>, <code>sum()</code>, etc. Here, we take the mean using the <code>mean()</code> function and we also use <code>na.rm = TRUE</code> to remove the <code>NA</code> values:</p>
+<div class="sourceCode" id="cb53"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="co"># use the &#39;dcast&#39; function to convert the data back into wide format</span></span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>airquality_wide <span class="ot">&lt;-</span> <span class="fu">dcast</span>(airquality_long,</span>
+<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a>                         <span class="at">formula =</span> Month <span class="sc">~</span> climate_var,</span>
+<span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a>                         <span class="at">value.var =</span> <span class="st">&#39;climate_value&#39;</span>,</span>
+<span id="cb53-5"><a href="#cb53-5" aria-hidden="true" tabindex="-1"></a>                         <span class="at">fun.aggregate =</span> mean,</span>
+<span id="cb53-6"><a href="#cb53-6" aria-hidden="true" tabindex="-1"></a>                         <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb53-7"><a href="#cb53-7" aria-hidden="true" tabindex="-1"></a>airquality_wide</span></code></pre></div>
+<pre><code>##   Month    Ozone  Solar.R      Wind     Temp
+## 1     5 23.61538 181.2963 11.622581 65.54839
+## 2     6 29.44444 190.1667 10.266667 79.10000
+## 3     7 59.11538 216.4839  8.941935 83.90323
+## 4     8 59.96154 171.8571  8.793548 83.96774
+## 5     9 31.44828 167.4333 10.180000 76.90000</code></pre>
+<p>We see here that we now obtained the mean value of the variables for each month.</p>
+</div>
+<div id="tidyr-package" class="section level2">
+<h2><code>tidyr</code> Package</h2>
+<p>There is also another popular package for data reshaping and more general data tidying, called <code>tidyr</code>. <code>tidyr</code> provides functionality for:</p>
+<ul>
+<li>Pivoting data (i.e. reshaping);</li>
+<li>Rectangling data (e.g. turning deeply nested lists into rectangular data);</li>
+<li>Nesting and unnesting (e.g. converting grouped data to a few where each group becomes a single row with a nested data frame, and the reverse);</li>
+<li>Splitting and combining character columns (e.g. pulling a single character column into multiple columns);</li>
+<li>Making implicit missing values explicit and vice versa;</li>
+</ul>
+<p>Useful Links and Resources, below, provides some links of the basic functionality from <code>tidyr</code>.</p>
+</div>
+</div>
+<div id="stacking" class="section level1">
+<h1>Stacking</h1>
+<p>The <code>stack()</code> and <code>unstack()</code> functions in <code>R</code> are handy when working with data frames. Applying <code>stack()</code> to a data frame simply stacks the columns vectors on top of each other to form a single vector along with a factor indicating where each observation came from. As expected, the <code>unstack()</code> function does the complete opposite. <br></p>
+<p>Below is a demonstration using the built-in <code>PlantGrowth</code> dataset. The dataset contains the weights of 30 plants from 3 different groups, namely <code>ctrl</code> (control), <code>trt1</code> (treatment 1) and <code>trt2</code> (treatment 2). Because of the way <code>stack()</code> works, we first convert the group variable from <code>factor</code> to <code>character</code> to avoid getting a warning message.</p>
+<div class="sourceCode" id="cb55"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="co"># use the built-in &#39;PlantGrowth&#39; dataset</span></span>
+<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(PlantGrowth)</span></code></pre></div>
+<pre><code>##   weight group
+## 1   4.17  ctrl
+## 2   5.58  ctrl
+## 3   5.18  ctrl
+## 4   6.11  ctrl
+## 5   4.50  ctrl
+## 6   4.61  ctrl</code></pre>
+<div class="sourceCode" id="cb57"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a><span class="co"># converting group variable from factor to character</span></span>
+<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a>PlantGrowth<span class="sc">$</span>group <span class="ot">&lt;-</span> <span class="fu">as.character</span>(PlantGrowth<span class="sc">$</span>group)</span>
+<span id="cb57-3"><a href="#cb57-3" aria-hidden="true" tabindex="-1"></a><span class="co"># stacking</span></span>
+<span id="cb57-4"><a href="#cb57-4" aria-hidden="true" tabindex="-1"></a><span class="fu">stack</span>(PlantGrowth)</span></code></pre></div>
+<pre><code>##    values    ind
+## 1    4.17 weight
+## 2    5.58 weight
+## 3    5.18 weight
+## 4    6.11 weight
+## 5     4.5 weight
+## 6    4.61 weight
+## 7    5.17 weight
+## 8    4.53 weight
+## 9    5.33 weight
+## 10   5.14 weight
+## 11   4.81 weight
+## 12   4.17 weight
+## 13   4.41 weight
+## 14   3.59 weight
+## 15   5.87 weight
+## 16   3.83 weight
+## 17   6.03 weight
+## 18   4.89 weight
+## 19   4.32 weight
+## 20   4.69 weight
+## 21   6.31 weight
+## 22   5.12 weight
+## 23   5.54 weight
+## 24    5.5 weight
+## 25   5.37 weight
+## 26   5.29 weight
+## 27   4.92 weight
+## 28   6.15 weight
+## 29    5.8 weight
+## 30   5.26 weight
+## 31   ctrl  group
+## 32   ctrl  group
+## 33   ctrl  group
+## 34   ctrl  group
+## 35   ctrl  group
+## 36   ctrl  group
+## 37   ctrl  group
+## 38   ctrl  group
+## 39   ctrl  group
+## 40   ctrl  group
+## 41   trt1  group
+## 42   trt1  group
+## 43   trt1  group
+## 44   trt1  group
+## 45   trt1  group
+## 46   trt1  group
+## 47   trt1  group
+## 48   trt1  group
+## 49   trt1  group
+## 50   trt1  group
+## 51   trt2  group
+## 52   trt2  group
+## 53   trt2  group
+## 54   trt2  group
+## 55   trt2  group
+## 56   trt2  group
+## 57   trt2  group
+## 58   trt2  group
+## 59   trt2  group
+## 60   trt2  group</code></pre>
+<div class="sourceCode" id="cb59"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="co"># unstacking</span></span>
+<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a><span class="fu">unstack</span>(PlantGrowth)</span></code></pre></div>
+<pre><code>##    ctrl trt1 trt2
+## 1  4.17 4.81 6.31
+## 2  5.58 4.17 5.12
+## 3  5.18 4.41 5.54
+## 4  6.11 3.59 5.50
+## 5  4.50 5.87 5.37
+## 6  4.61 3.83 5.29
+## 7  5.17 6.03 4.92
+## 8  4.53 4.89 6.15
+## 9  5.33 4.32 5.80
+## 10 5.14 4.69 5.26</code></pre>
+<p>Check the help file of <code>stack()</code> for more options and examples.</p>
+</div>
+<div id="subsetting" class="section level1">
+<h1>Subsetting</h1>
+<p><code>R</code> has some powerful indexing features that allows you to quickly access object elements. In this subsection, we will learn how to efficiently select or exclude particular elements in vectors or data frames.</p>
+<div id="subsetting-vectors" class="section level2">
+<h2>Subsetting Vectors</h2>
+<p>Consider a simple numeric vector:</p>
+<div class="sourceCode" id="cb61"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a>x <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">1.4</span>, <span class="fl">5.6</span>, <span class="fl">7.8</span>, <span class="fl">2.6</span>)</span></code></pre></div>
+<p>The three ways in which we can subset elements of a vector in <code>R</code> are:</p>
+<ul>
+<li>Using positive integers: We use a vector of positive integers to specify the index of the elements we want to return / keep.</li>
+<li>Using negative integers: We use a vector of negative integers to specify the index of the elements we want to exclude.</li>
+<li>Using logical vectors: We use a vector of logical values where elements are selected if the corresponding logical value is <code>TRUE</code>.</li>
+</ul>
+<div class="sourceCode" id="cb62"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="co"># define x</span></span>
+<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a>x <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">1.4</span>, <span class="fl">5.6</span>, <span class="fl">7.8</span>, <span class="fl">2.6</span>)</span>
+<span id="cb62-3"><a href="#cb62-3" aria-hidden="true" tabindex="-1"></a>x</span></code></pre></div>
+<pre><code>## [1] 1.4 5.6 7.8 2.6</code></pre>
+<div class="sourceCode" id="cb64"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a><span class="co"># select the 2nd and 4th element</span></span>
+<span id="cb64-2"><a href="#cb64-2" aria-hidden="true" tabindex="-1"></a>x[<span class="fu">c</span>(<span class="dv">2</span>,<span class="dv">4</span>)]</span></code></pre></div>
+<pre><code>## [1] 5.6 2.6</code></pre>
+<div class="sourceCode" id="cb66"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a><span class="co"># exclude the 2nd and 4th element</span></span>
+<span id="cb66-2"><a href="#cb66-2" aria-hidden="true" tabindex="-1"></a>x[<span class="sc">-</span><span class="fu">c</span>(<span class="dv">2</span>,<span class="dv">4</span>)]</span></code></pre></div>
+<pre><code>## [1] 1.4 7.8</code></pre>
+<div class="sourceCode" id="cb68"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a><span class="co"># select the 2nd and 4th element</span></span>
+<span id="cb68-2"><a href="#cb68-2" aria-hidden="true" tabindex="-1"></a>x[<span class="fu">c</span>(<span class="cn">FALSE</span>, <span class="cn">TRUE</span>, <span class="cn">FALSE</span>, <span class="cn">TRUE</span>)]</span></code></pre></div>
+<pre><code>## [1] 5.6 2.6</code></pre>
+<div class="sourceCode" id="cb70"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a><span class="co"># select the elements that are strictly greater than 5</span></span>
+<span id="cb70-2"><a href="#cb70-2" aria-hidden="true" tabindex="-1"></a>x[x <span class="sc">&gt;</span> <span class="dv">5</span>]</span></code></pre></div>
+<pre><code>## [1] 5.6 7.8</code></pre>
+<p>By running the above code, we can see that a very useful way to subset vectors is by using logical vectors. In the last line, we first evaluated the conditional statement <code>x &gt; 5</code> and then we used the result to subset <code>x</code>.</p>
+</div>
+<div id="subsetting-data-frames" class="section level2">
+<h2>Subsetting Data Frames</h2>
+<p>The most basic way of subsetting a data frame in R is using square brackets <code>[ ]</code>:</p>
+<div class="sourceCode" id="cb72"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a>dataframe[x, y]</span></code></pre></div>
+<p>where <code>dataframe</code> is a data frame in <code>R</code>, <code>x</code> is the rows that we want to be returned, and <code>y</code> is a vector of the columns that we want returned.</p>
+<div class="sourceCode" id="cb73"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb73-1"><a href="#cb73-1" aria-hidden="true" tabindex="-1"></a><span class="co"># create dataframe</span></span>
+<span id="cb73-2"><a href="#cb73-2" aria-hidden="true" tabindex="-1"></a>dataframe <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">v1 =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>, <span class="at">v2 =</span> <span class="dv">6</span><span class="sc">:</span><span class="dv">10</span>, <span class="at">v3 =</span> <span class="dv">11</span><span class="sc">:</span><span class="dv">15</span>)</span>
+<span id="cb73-3"><a href="#cb73-3" aria-hidden="true" tabindex="-1"></a>dataframe</span></code></pre></div>
+<pre><code>##   v1 v2 v3
+## 1  1  6 11
+## 2  2  7 12
+## 3  3  8 13
+## 4  4  9 14
+## 5  5 10 15</code></pre>
+<div class="sourceCode" id="cb75"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb75-1"><a href="#cb75-1" aria-hidden="true" tabindex="-1"></a><span class="co"># select the first 3 rows</span></span>
+<span id="cb75-2"><a href="#cb75-2" aria-hidden="true" tabindex="-1"></a>dataframe[<span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>, ]</span></code></pre></div>
+<pre><code>##   v1 v2 v3
+## 1  1  6 11
+## 2  2  7 12
+## 3  3  8 13</code></pre>
+<div class="sourceCode" id="cb77"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb77-1"><a href="#cb77-1" aria-hidden="true" tabindex="-1"></a><span class="co"># exclude the first 3 rows</span></span>
+<span id="cb77-2"><a href="#cb77-2" aria-hidden="true" tabindex="-1"></a>dataframe[<span class="sc">-</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>), ]</span></code></pre></div>
+<pre><code>##   v1 v2 v3
+## 4  4  9 14
+## 5  5 10 15</code></pre>
+<div class="sourceCode" id="cb79"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb79-1"><a href="#cb79-1" aria-hidden="true" tabindex="-1"></a><span class="co"># select the first 3 rows and first 2 columns</span></span>
+<span id="cb79-2"><a href="#cb79-2" aria-hidden="true" tabindex="-1"></a>dataframe[<span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>]</span></code></pre></div>
+<pre><code>##   v1 v2
+## 1  1  6
+## 2  2  7
+## 3  3  8</code></pre>
+<div class="sourceCode" id="cb81"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb81-1"><a href="#cb81-1" aria-hidden="true" tabindex="-1"></a><span class="co"># select the rows using a logical vector (condition: if the variable v3 is divisible by 3)</span></span>
+<span id="cb81-2"><a href="#cb81-2" aria-hidden="true" tabindex="-1"></a>dataframe[dataframe<span class="sc">$</span>v3 <span class="sc">%%</span> <span class="dv">3</span> <span class="sc">==</span> <span class="dv">0</span>, ]</span></code></pre></div>
+<pre><code>##   v1 v2 v3
+## 2  2  7 12
+## 5  5 10 15</code></pre>
+<div class="sourceCode" id="cb83"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb83-1"><a href="#cb83-1" aria-hidden="true" tabindex="-1"></a><span class="co"># select columns v1 and v3</span></span>
+<span id="cb83-2"><a href="#cb83-2" aria-hidden="true" tabindex="-1"></a>dataframe[, <span class="fu">c</span>(<span class="st">&quot;v1&quot;</span>, <span class="st">&quot;v3&quot;</span>)]</span></code></pre></div>
+<pre><code>##   v1 v3
+## 1  1 11
+## 2  2 12
+## 3  3 13
+## 4  4 14
+## 5  5 15</code></pre>
+<div class="sourceCode" id="cb85"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb85-1"><a href="#cb85-1" aria-hidden="true" tabindex="-1"></a><span class="co"># select columns v1 and v3 (alternative)</span></span>
+<span id="cb85-2"><a href="#cb85-2" aria-hidden="true" tabindex="-1"></a>dataframe[<span class="fu">c</span>(<span class="st">&quot;v1&quot;</span>, <span class="st">&quot;v3&quot;</span>)]</span></code></pre></div>
+<pre><code>##   v1 v3
+## 1  1 11
+## 2  2 12
+## 3  3 13
+## 4  4 14
+## 5  5 15</code></pre>
+<p>As we have seen in “Data Structures in R,” we can also subset the rows of a data frame using the <code>subset()</code> function.</p>
+</div>
+</div>
+<div id="dplyr-verbs" class="section level1">
+<h1><code>dplyr</code> Verbs</h1>
+<p>One of the most useful packages to manipulate data is <code>dplyr</code>. This package contains the so-called <code>dplyr</code> verbs:</p>
+<ul>
+<li><code>mutate()</code>: Adds new variables that are functions of existing variables</li>
+<li><code>select()</code>: Picks variables based on their names.</li>
+<li><code>filter()</code>: Picks cases based on their values.</li>
+<li><code>summarize()</code>: Reduces multiple values down to a single summary.</li>
+<li><code>arrange()</code>: Changes the ordering of the rows.</li>
+</ul>
+<p>When working with <code>dplyr</code> verbs, we typically want to use the result of a verb applied to a data frame as input for another verb. In such cases, it is more intuitive to use the pipe <code>%&gt;%</code> operator from the <a href="https://cran.r-project.org/web/packages/magrittr/index.html"><code>magrittr</code></a> <code>R</code> package to chain operations. The <code>magrittr</code> package is loaded automatically when <code>dplyr</code> is loaded.</p>
+<p>The variable to the left of <code>%&gt;%</code> operator is passed as the first argument to the function on the right of the <code>%&gt;%</code> operator.</p>
+<p>We have already encountered some of the those verbs and functionality when working with databases in <code>R</code>. Here, we take a more in-depth view of <code>dplyr</code>’s functionality.</p>
+<p>Throughout this section, we use the <code>mtcars</code> data set to illustrate the capabilities of the <code>dplyr</code> verbs. Here is a preview of the dataset and its structure:</p>
+<div class="sourceCode" id="cb87"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb87-1"><a href="#cb87-1" aria-hidden="true" tabindex="-1"></a><span class="co"># preview the &#39;mtcars&#39; data set</span></span>
+<span id="cb87-2"><a href="#cb87-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(mtcars)</span></code></pre></div>
+<pre><code>##                    mpg cyl disp  hp drat    wt  qsec vs am gear carb
+## Mazda RX4         21.0   6  160 110 3.90 2.620 16.46  0  1    4    4
+## Mazda RX4 Wag     21.0   6  160 110 3.90 2.875 17.02  0  1    4    4
+## Datsun 710        22.8   4  108  93 3.85 2.320 18.61  1  1    4    1
+## Hornet 4 Drive    21.4   6  258 110 3.08 3.215 19.44  1  0    3    1
+## Hornet Sportabout 18.7   8  360 175 3.15 3.440 17.02  0  0    3    2
+## Valiant           18.1   6  225 105 2.76 3.460 20.22  1  0    3    1</code></pre>
+<div class="sourceCode" id="cb89"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb89-1"><a href="#cb89-1" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(mtcars)</span></code></pre></div>
+<pre><code>## &#39;data.frame&#39;:    32 obs. of  11 variables:
+##  $ mpg : num  21 21 22.8 21.4 18.7 18.1 14.3 24.4 22.8 19.2 ...
+##  $ cyl : num  6 6 4 6 8 6 8 4 4 6 ...
+##  $ disp: num  160 160 108 258 360 ...
+##  $ hp  : num  110 110 93 110 175 105 245 62 95 123 ...
+##  $ drat: num  3.9 3.9 3.85 3.08 3.15 2.76 3.21 3.69 3.92 3.92 ...
+##  $ wt  : num  2.62 2.88 2.32 3.21 3.44 ...
+##  $ qsec: num  16.5 17 18.6 19.4 17 ...
+##  $ vs  : num  0 0 1 1 0 1 0 1 1 1 ...
+##  $ am  : num  1 1 1 0 0 0 0 0 0 0 ...
+##  $ gear: num  4 4 4 3 3 3 3 4 4 4 ...
+##  $ carb: num  4 4 1 1 2 1 4 2 2 4 ...</code></pre>
+<div id="mutate" class="section level2">
+<h2><code>mutate()</code></h2>
+<p>The variable <code>mpg</code> stands for miles per gallon. Suppose we want to add another variable called <code>kpg</code> which stands for kilometres per gallon. We know that 1 mile is approximately equal to 1.61 kilometres. We can use <code>mutate()</code> to add the variable <code>kpg</code>:</p>
+<div class="sourceCode" id="cb91"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb91-1"><a href="#cb91-1" aria-hidden="true" tabindex="-1"></a><span class="co"># loading the &#39;dplyr package</span></span>
+<span id="cb91-2"><a href="#cb91-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span></code></pre></div>
+<div class="sourceCode" id="cb92"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb92-1"><a href="#cb92-1" aria-hidden="true" tabindex="-1"></a><span class="co"># adding &#39;kpg&#39;</span></span>
+<span id="cb92-2"><a href="#cb92-2" aria-hidden="true" tabindex="-1"></a>mtcars1 <span class="ot">&lt;-</span> <span class="fu">mutate</span>(mtcars, <span class="at">kpg =</span> <span class="fl">1.61</span> <span class="sc">*</span> mpg)</span>
+<span id="cb92-3"><a href="#cb92-3" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(mtcars1)</span></code></pre></div>
+<pre><code>##                    mpg cyl disp  hp drat    wt  qsec vs am gear carb    kpg
+## Mazda RX4         21.0   6  160 110 3.90 2.620 16.46  0  1    4    4 33.810
+## Mazda RX4 Wag     21.0   6  160 110 3.90 2.875 17.02  0  1    4    4 33.810
+## Datsun 710        22.8   4  108  93 3.85 2.320 18.61  1  1    4    1 36.708
+## Hornet 4 Drive    21.4   6  258 110 3.08 3.215 19.44  1  0    3    1 34.454
+## Hornet Sportabout 18.7   8  360 175 3.15 3.440 17.02  0  0    3    2 30.107
+## Valiant           18.1   6  225 105 2.76 3.460 20.22  1  0    3    1 29.141</code></pre>
+<div class="sourceCode" id="cb94"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb94-1"><a href="#cb94-1" aria-hidden="true" tabindex="-1"></a><span class="co"># alternative approach using the pipe &#39;%&gt;%&#39; operator</span></span>
+<span id="cb94-2"><a href="#cb94-2" aria-hidden="true" tabindex="-1"></a>mtcars2 <span class="ot">&lt;-</span> mtcars <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">kpg =</span> <span class="fl">1.61</span> <span class="sc">*</span> mpg)</span>
+<span id="cb94-3"><a href="#cb94-3" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(mtcars2)</span></code></pre></div>
+<pre><code>##                    mpg cyl disp  hp drat    wt  qsec vs am gear carb    kpg
+## Mazda RX4         21.0   6  160 110 3.90 2.620 16.46  0  1    4    4 33.810
+## Mazda RX4 Wag     21.0   6  160 110 3.90 2.875 17.02  0  1    4    4 33.810
+## Datsun 710        22.8   4  108  93 3.85 2.320 18.61  1  1    4    1 36.708
+## Hornet 4 Drive    21.4   6  258 110 3.08 3.215 19.44  1  0    3    1 34.454
+## Hornet Sportabout 18.7   8  360 175 3.15 3.440 17.02  0  0    3    2 30.107
+## Valiant           18.1   6  225 105 2.76 3.460 20.22  1  0    3    1 29.141</code></pre>
+<div class="sourceCode" id="cb96"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb96-1"><a href="#cb96-1" aria-hidden="true" tabindex="-1"></a><span class="co"># mtcars1 is identical to mtcars2</span></span>
+<span id="cb96-2"><a href="#cb96-2" aria-hidden="true" tabindex="-1"></a><span class="fu">identical</span>(mtcars1, mtcars2)</span></code></pre></div>
+<pre><code>## [1] TRUE</code></pre>
+<p>Note that the shortcut for the pipe operator <code>%&gt;%</code> is pressing <code>Shift</code> <code>Ctrl</code> and <code>M</code> together.</p>
+</div>
+<div id="select" class="section level2">
+<h2><code>select()</code></h2>
+<p>Suppose we only want to select the <code>mpg</code>, <code>cyl</code>, <code>hp</code>, <code>vs</code> and <code>gear</code> columns. We can use the <code>select()</code> verb to do so.</p>
+<div class="sourceCode" id="cb98"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb98-1"><a href="#cb98-1" aria-hidden="true" tabindex="-1"></a><span class="co"># select columns</span></span>
+<span id="cb98-2"><a href="#cb98-2" aria-hidden="true" tabindex="-1"></a>mtcars <span class="sc">%&gt;%</span> </span>
+<span id="cb98-3"><a href="#cb98-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(mpg, cyl, hp, vs, gear)</span></code></pre></div>
+<pre><code>##                      mpg cyl  hp vs gear
+## Mazda RX4           21.0   6 110  0    4
+## Mazda RX4 Wag       21.0   6 110  0    4
+## Datsun 710          22.8   4  93  1    4
+## Hornet 4 Drive      21.4   6 110  1    3
+## Hornet Sportabout   18.7   8 175  0    3
+## Valiant             18.1   6 105  1    3
+## Duster 360          14.3   8 245  0    3
+## Merc 240D           24.4   4  62  1    4
+## Merc 230            22.8   4  95  1    4
+## Merc 280            19.2   6 123  1    4
+## Merc 280C           17.8   6 123  1    4
+## Merc 450SE          16.4   8 180  0    3
+## Merc 450SL          17.3   8 180  0    3
+## Merc 450SLC         15.2   8 180  0    3
+## Cadillac Fleetwood  10.4   8 205  0    3
+## Lincoln Continental 10.4   8 215  0    3
+## Chrysler Imperial   14.7   8 230  0    3
+## Fiat 128            32.4   4  66  1    4
+## Honda Civic         30.4   4  52  1    4
+## Toyota Corolla      33.9   4  65  1    4
+## Toyota Corona       21.5   4  97  1    3
+## Dodge Challenger    15.5   8 150  0    3
+## AMC Javelin         15.2   8 150  0    3
+## Camaro Z28          13.3   8 245  0    3
+## Pontiac Firebird    19.2   8 175  0    3
+## Fiat X1-9           27.3   4  66  1    4
+## Porsche 914-2       26.0   4  91  0    5
+## Lotus Europa        30.4   4 113  1    5
+## Ford Pantera L      15.8   8 264  0    5
+## Ferrari Dino        19.7   6 175  0    5
+## Maserati Bora       15.0   8 335  0    5
+## Volvo 142E          21.4   4 109  1    4</code></pre>
+</div>
+<div id="filter" class="section level2">
+<h2><code>filter()</code></h2>
+<p>We can use the <code>filter()</code> function to get only observations that match a condition (or multiple conditions). <code>filter()</code> is the <code>dplyr</code> equivalent to <code>subset()</code>, and allows us to write more intuitive code.</p>
+<div class="sourceCode" id="cb100"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb100-1"><a href="#cb100-1" aria-hidden="true" tabindex="-1"></a><span class="co"># get observations where &#39;gear&#39; is equal to 4 and &#39;disp&#39; is less than 80</span></span>
+<span id="cb100-2"><a href="#cb100-2" aria-hidden="true" tabindex="-1"></a>mtcars <span class="sc">%&gt;%</span> <span class="fu">filter</span>(gear <span class="sc">==</span> <span class="dv">4</span>, disp <span class="sc">&lt;</span> <span class="dv">80</span>)</span></code></pre></div>
+<pre><code>##                 mpg cyl disp hp drat    wt  qsec vs am gear carb
+## Fiat 128       32.4   4 78.7 66 4.08 2.200 19.47  1  1    4    1
+## Honda Civic    30.4   4 75.7 52 4.93 1.615 18.52  1  1    4    2
+## Toyota Corolla 33.9   4 71.1 65 4.22 1.835 19.90  1  1    4    1
+## Fiat X1-9      27.3   4 79.0 66 4.08 1.935 18.90  1  1    4    1</code></pre>
+<div class="sourceCode" id="cb102"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb102-1"><a href="#cb102-1" aria-hidden="true" tabindex="-1"></a><span class="co"># this is equivalent to</span></span>
+<span id="cb102-2"><a href="#cb102-2" aria-hidden="true" tabindex="-1"></a><span class="fu">subset</span>(mtcars, gear <span class="sc">==</span> <span class="dv">4</span> <span class="sc">&amp;</span> disp <span class="sc">&lt;</span> <span class="dv">80</span>)</span></code></pre></div>
+<pre><code>##                 mpg cyl disp hp drat    wt  qsec vs am gear carb
+## Fiat 128       32.4   4 78.7 66 4.08 2.200 19.47  1  1    4    1
+## Honda Civic    30.4   4 75.7 52 4.93 1.615 18.52  1  1    4    2
+## Toyota Corolla 33.9   4 71.1 65 4.22 1.835 19.90  1  1    4    1
+## Fiat X1-9      27.3   4 79.0 66 4.08 1.935 18.90  1  1    4    1</code></pre>
+</div>
+<div id="arrange" class="section level2">
+<h2><code>arrange()</code></h2>
+<p>We can arrange our observations in any convenient way using the <code>arrange()</code> function:</p>
+<div class="sourceCode" id="cb104"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb104-1"><a href="#cb104-1" aria-hidden="true" tabindex="-1"></a><span class="co"># arrange &#39;mtcars&#39; in ascending order of &#39;mpg&#39;</span></span>
+<span id="cb104-2"><a href="#cb104-2" aria-hidden="true" tabindex="-1"></a>mtcars <span class="sc">%&gt;%</span> </span>
+<span id="cb104-3"><a href="#cb104-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(mpg) <span class="sc">%&gt;%</span> </span>
+<span id="cb104-4"><a href="#cb104-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">head</span>()</span></code></pre></div>
+<pre><code>##                      mpg cyl disp  hp drat    wt  qsec vs am gear carb
+## Cadillac Fleetwood  10.4   8  472 205 2.93 5.250 17.98  0  0    3    4
+## Lincoln Continental 10.4   8  460 215 3.00 5.424 17.82  0  0    3    4
+## Camaro Z28          13.3   8  350 245 3.73 3.840 15.41  0  0    3    4
+## Duster 360          14.3   8  360 245 3.21 3.570 15.84  0  0    3    4
+## Chrysler Imperial   14.7   8  440 230 3.23 5.345 17.42  0  0    3    4
+## Maserati Bora       15.0   8  301 335 3.54 3.570 14.60  0  1    5    8</code></pre>
+<div class="sourceCode" id="cb106"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb106-1"><a href="#cb106-1" aria-hidden="true" tabindex="-1"></a><span class="co"># arrange &#39;mtcars&#39; in descending order of &#39;disp&#39;</span></span>
+<span id="cb106-2"><a href="#cb106-2" aria-hidden="true" tabindex="-1"></a>mtcars <span class="sc">%&gt;%</span> </span>
+<span id="cb106-3"><a href="#cb106-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(disp)) <span class="sc">%&gt;%</span> </span>
+<span id="cb106-4"><a href="#cb106-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">head</span>()</span></code></pre></div>
+<pre><code>##                      mpg cyl disp  hp drat    wt  qsec vs am gear carb
+## Cadillac Fleetwood  10.4   8  472 205 2.93 5.250 17.98  0  0    3    4
+## Lincoln Continental 10.4   8  460 215 3.00 5.424 17.82  0  0    3    4
+## Chrysler Imperial   14.7   8  440 230 3.23 5.345 17.42  0  0    3    4
+## Pontiac Firebird    19.2   8  400 175 3.08 3.845 17.05  0  0    3    2
+## Hornet Sportabout   18.7   8  360 175 3.15 3.440 17.02  0  0    3    2
+## Duster 360          14.3   8  360 245 3.21 3.570 15.84  0  0    3    4</code></pre>
+</div>
+<div id="summarize" class="section level2">
+<h2><code>summarize()</code></h2>
+<p>We can compute several summaries using the <code>summarize()</code> function. For example, if we want to calculate the maximum <code>mpg</code> value, the minimum <code>disp</code> value, and the mean of <code>qsec</code> in <code>mtcars</code> we do:</p>
+<div class="sourceCode" id="cb108"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb108-1"><a href="#cb108-1" aria-hidden="true" tabindex="-1"></a><span class="co"># compute summaries</span></span>
+<span id="cb108-2"><a href="#cb108-2" aria-hidden="true" tabindex="-1"></a>mtcars <span class="sc">%&gt;%</span> </span>
+<span id="cb108-3"><a href="#cb108-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(<span class="at">maximum_mpg =</span> <span class="fu">max</span>(mpg),</span>
+<span id="cb108-4"><a href="#cb108-4" aria-hidden="true" tabindex="-1"></a>            <span class="at">minimum_disp =</span> <span class="fu">min</span>(disp),</span>
+<span id="cb108-5"><a href="#cb108-5" aria-hidden="true" tabindex="-1"></a>            <span class="at">average_qsec =</span> <span class="fu">mean</span>(qsec))</span></code></pre></div>
+<pre><code>##   maximum_mpg minimum_disp average_qsec
+## 1        33.9         71.1     17.84875</code></pre>
+<p><code>summarize()</code> combines well with the <code>group_by()</code> function. For example,</p>
+<div class="sourceCode" id="cb110"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb110-1"><a href="#cb110-1" aria-hidden="true" tabindex="-1"></a><span class="co"># &#39;summarize()&#39; and &#39;group_by()&#39; functions</span></span>
+<span id="cb110-2"><a href="#cb110-2" aria-hidden="true" tabindex="-1"></a>iris <span class="sc">%&gt;%</span> </span>
+<span id="cb110-3"><a href="#cb110-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(Species) <span class="sc">%&gt;%</span> </span>
+<span id="cb110-4"><a href="#cb110-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(<span class="at">Avg_Sepal_Length =</span> <span class="fu">mean</span>(Sepal.Length),</span>
+<span id="cb110-5"><a href="#cb110-5" aria-hidden="true" tabindex="-1"></a>            <span class="at">Avg_Sepal_Width =</span> <span class="fu">mean</span>(Sepal.Width),</span>
+<span id="cb110-6"><a href="#cb110-6" aria-hidden="true" tabindex="-1"></a>            <span class="at">Avg_Petal_Length =</span> <span class="fu">mean</span>(Petal.Length),</span>
+<span id="cb110-7"><a href="#cb110-7" aria-hidden="true" tabindex="-1"></a>            <span class="at">Avg_Petal_Width =</span> <span class="fu">mean</span>(Petal.Width))</span></code></pre></div>
+<pre><code>## # A tibble: 3 x 5
+##   Species    Avg_Sepal_Length Avg_Sepal_Width Avg_Petal_Length Avg_Petal_Width
+##   &lt;fct&gt;                 &lt;dbl&gt;           &lt;dbl&gt;            &lt;dbl&gt;           &lt;dbl&gt;
+## 1 setosa                 5.01            3.43             1.46           0.246
+## 2 versicolor             5.94            2.77             4.26           1.33 
+## 3 virginica              6.59            2.97             5.55           2.03</code></pre>
 </div>
 </div>
 </div>
