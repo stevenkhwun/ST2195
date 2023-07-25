@@ -1,0 +1,136 @@
+---
+title: "Data Wrangling Operations in `Python`"
+date: "`r Sys.Date()`"
+author: Steven Wun
+output:
+  rmdformats::material:
+    highlight: kate
+  pdf_document: default
+  word_document: default
+  html_document:
+    number_sections: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Introduction
+
+In order to run `Python` in `R`, we need to load the `reticulate` package first.
+
+```{r warning=FALSE}
+# load the required library to run Python in R
+library(reticulate)
+```
+
+We will use the same data set `airquality`, from the unit on data wrangling in `R`. We first export the data from `R` to CSV files so that the data set can be accessible for `Python`.
+
+```{r eval=FALSE}
+# write R data set to CSV file
+write.table(airquality, file = "Data/airquality.csv", sep = ",", row.names = FALSE)
+```
+
+
+
+```{python}
+import pandas as pd
+import numpy as np
+airquality = pd.read_csv("Data/airquality.csv")
+airquality = airquality[['Month', 'Day', 'Ozone', 'Solar.R', 'Temp', 'Wind']]
+airquality.head()
+```
+
+
+## Modify an R variable
+
+
+
+## A Python chunk
+
+This works fine and as expected. 
+
+```{python}
+x = 42 * 2
+print(x) 
+```
+
+The value of `x` in the Python session is `r py$x`.
+It is not the same `x` as the one in R.
+
+## Modify a Python variable
+
+```{python}
+x = x + 18 
+print(x)
+```
+
+Retrieve the value of `x` from the Python session again:
+
+```{r}
+py$x
+```
+
+Assign to a variable in the Python session from R:
+
+```{r}
+py$y = 1:5
+```
+
+See the value of `y` in the Python session:
+
+```{python}
+print(y)
+```
+
+## Python graphics
+
+You can draw plots using the **matplotlib** package in Python.
+
+```{python}
+import matplotlib.pyplot as plt
+plt.plot([0, 2, 1, 4])
+plt.show()
+```
+
+```{python}
+import pandas as pd
+PyDf = pd.DataFrame(
+  {"a": [4, 5, 6],
+  "b": [7, 8, 9],
+  "c": [10, 11, 12]},
+  index = [1, 2, 3]
+)
+PyDf
+```
+
+
+
+```{python}
+usvideos_url = (
+"https://raw.githubusercontent.com/OrysyaStus/SeismicBlog/master/Data_Visualizations"
+"/Dynamic_Visuals_Using_Date_Range_Slicers_Pt1/data/USvideos.csv"
+)
+usvideos = pd.read_csv(usvideos_url)
+usvideos
+```
+
+```{python}
+usvideos[["video_id", "title"]]
+```
+
+```{python}
+url = "https://raw.githubusercontent.com/stevenkhwun/Data/main/PS4DS/four_sessions.csv"
+sessions = pd.read_csv(url)
+sessions
+```
+
+```{python}
+sp500 = "https://raw.githubusercontent.com/stevenkhwun/Data/main/PS4DS/sp500_data.csv.gz"
+sp500 = pd.read_csv(sp500)
+sp500.count()
+```
+
+
+
