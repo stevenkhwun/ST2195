@@ -18,9 +18,10 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Introduction
 
-In order to run `Python` in `R`, we need to load the `reticulate` package first.
+In order to run `Python` in `R`, we need to load the `reticulate` package first. Further, unless marked as `R code`, all the codes below are Python codes.
 
 ```{r warning=FALSE}
+# R code
 # load the required library to run Python in R
 library(reticulate)
 ```
@@ -28,109 +29,109 @@ library(reticulate)
 We will use the same data set `airquality`, from the unit on data wrangling in `R`. We first export the data from `R` to CSV files so that the data set can be accessible for `Python`.
 
 ```{r eval=FALSE}
+# R code
 # write R data set to CSV file
 write.table(airquality, file = "Data/airquality.csv", sep = ",", row.names = FALSE)
 ```
 
-
+We then load the data to `Python`, and rearrange the columns so that `Month` and `Day` information are in the first two columns:
 
 ```{python}
+# load the required library
 import pandas as pd
 import numpy as np
+# load the data to Python
 airquality = pd.read_csv("Data/airquality.csv")
+# rearrange the columns
 airquality = airquality[['Month', 'Day', 'Ozone', 'Solar.R', 'Temp', 'Wind']]
 airquality.head()
 ```
 
+There is some missing data in the data set. We can see the data as in the wide format as as it has a column for each variable (`Ozone`, `Solar.R`, `Temp`, `Wind`). In each row, we get the values for `Ozone`, `Solar.R`, `Temp`, `Wind` level for a particular day. For example, the first row has `Ozone` = 41.0, `Solar.R` = 190.0, `Temp` = 67, `Wind` = 7.4 for the day 1 May.
 
-## Modify an R variable
+In this page we will first show how we can reshape the data set. We then show how we can select a subset of the data. Finally we show how we can handle the missing data.
 
+# Reshaping Dataset
 
+`Python` `pandas` provides a variety of methods/functions for reshaping your data before analysis, and many of the methods are very similar to the `R` functions. We will reshape the data with the following methods:
 
-## A Python chunk
+*   Wide to long: `pandas.melt()`, `stack()`
+*   Long to wide: `pivot_table()`
 
-This works fine and as expected. 
+## Wide to Long
 
-```{python}
-x = 42 * 2
-print(x) 
-```
-
-The value of `x` in the Python session is `r py$x`.
-It is not the same `x` as the one in R.
-
-## Modify a Python variable
+We can convert the data from wide to long by the `pandas.melt()` function:
 
 ```{python}
-x = x + 18 
-print(x)
+# convert the data from wide to long
+pd.melt(airquality)
 ```
 
-Retrieve the value of `x` from the Python session again:
-
-```{r}
-py$x
-```
-
-Assign to a variable in the Python session from R:
-
-```{r}
-py$y = 1:5
-```
-
-See the value of `y` in the Python session:
+Similar to `melt()` in `R`, `pandas.melt()` in `Python` will set the first column named `variable` which records the name of the variable and a second column named `value` which records the value of that variable. For this data set it is not really useful to convert the data to the `DataFrame` above. Instead we should keep `Month` and `Day` as columns:
 
 ```{python}
-print(y)
+# keep 'Month' and 'Day' as columns
+airquality_long = pd.melt(airquality, id_vars = ['Month', 'Day'],
+                          value_vars = ['Ozone', 'Solar.R', 'Wind', 'Temp'],
+                          var_name = 'climate_var', value_name = 'climate_value')
+airquality_long.head()
 ```
 
-## Python graphics
+In this representation, each row gives the reading of a particular measure for a particular day. For example, the first row tells us that the ozone level is 41.0 on 1 May. This is done by providing extra arguments to the function `pandas.melt()`. The `id_vars = ['Month', 'Day']` argument specifies that `Month` and `Day` columns should be kept. By providing the argument `value_vars = ['Ozone', 'Solar.R', 'Wind', 'Temp']`, the other columns (`Ozone`, `Solar.R`, `Temp`, `Wind`) are converted into long format . We set the column names in our long format by passing the additional arguments `var_name='climate_var'`, `value_name='climate_value'`. You may notice the syntax for `pandas.melt()` is very similar to the one used in `melt()` in `R`.
 
-You can draw plots using the **matplotlib** package in Python.
+## Long to Wide
+
+We can use the method `pivot_table()` from `pandas.DataFrame` to convert data from long to wide format:
 
 ```{python}
-import matplotlib.pyplot as plt
-plt.plot([0, 2, 1, 4])
-plt.show()
+# convert data from long to wide
+airquality_wide = airquality_long.pivot_table(values = 'climate_value',
+                                              index = ['Month', 'Day'],
+                                              columns = ['climate_var'])
+airquality_wide.head()
 ```
+
+Note that while the resulting table `airquality_wide` is very similar to the original table `airquality`, we now have `Multindex` which groups `Month` and `Day` together for `airquality_wide`:
 
 ```{python}
-import pandas as pd
-PyDf = pd.DataFrame(
-  {"a": [4, 5, 6],
-  "b": [7, 8, 9],
-  "c": [10, 11, 12]},
-  index = [1, 2, 3]
-)
-PyDf
+# index of 'airquality_wide'
+airquality_wide.index
 ```
 
+This is because we set `index=['Month', 'Day']` so that two columns are used as key. For the other arguments, `columns=['climate_var']` specifies that the data should be grouped by the values in the column `climates_var` (i.e. `Ozone`, `Solar.R`, `Temp`, `Wind`) for the columns, and `values='climate_value'` specifies that the values from the column `climate_value` should be used to fill in the table. In our example, there is only one instance for the combination of row and column (e.g. `Month`, `Day`, `Ozone`), so the value from `climate_value` is used directly. For `airquality_wide`, each cell in the table represents the reading of a air quality measure (read from the column name) on a particular day (read from the `MultiIndex` in the row). For example, the value 41.0 in the first cell is the reading of `Ozone` on 1 May.
 
+What if there is more than one instance for the combination of row and column? For example, if we consider using only `Month` for the index, then for a given `Month` and `Ozone`, we will have multiple values 41.0, 36.0, etc from different values of Day. What does `pivot_table()` return in this case?
 
 ```{python}
-usvideos_url = (
-"https://raw.githubusercontent.com/OrysyaStus/SeismicBlog/master/Data_Visualizations"
-"/Dynamic_Visuals_Using_Date_Range_Slicers_Pt1/data/USvideos.csv"
-)
-usvideos = pd.read_csv(usvideos_url)
-usvideos
+# more than one instance for the combination of row and column
+airquality_month = airquality_long.pivot_table(values = 'climate_value',
+                                               index = ['Month'],
+                                               columns = ['climate_var'])
+airquality_month.head()
 ```
+
+It seems that the value inside the table is the average value. We can confirm it by considering the following code, which we specify using mean to aggregating the data by the argument `aggfunc=np.mean`:
 
 ```{python}
-usvideos[["video_id", "title"]]
+# using 'aggfunc = np.mean'
+airquality_month = airquality_long.pivot_table(values = 'climate_value',
+                                               index = ['Month'],
+                                               columns = ['climate_var'],
+                                               aggfunc = np.mean)
+airquality_month.head()
 ```
+
+As we can see, the return values are the same, showing us indeed averaging is used by default if we have multiple values for a given combination. For the table above, the value in the first cell (23.6) represents the monthly average ozone reading for Month = 5 (i.e. May).
+
+We can use other aggregating function, for example `np.max` to get the maximum value:
 
 ```{python}
-url = "https://raw.githubusercontent.com/stevenkhwun/Data/main/PS4DS/four_sessions.csv"
-sessions = pd.read_csv(url)
-sessions
+# using 'aggfunc = np.max'
+airquality_month = airquality_long.pivot_table(values = 'climate_value',
+                                               index = ['Month'],
+                                               columns = ['climate_var'],
+                                               aggfunc = np.max)
+airquality_month.head()
 ```
 
-```{python}
-sp500 = "https://raw.githubusercontent.com/stevenkhwun/Data/main/PS4DS/sp500_data.csv.gz"
-sp500 = pd.read_csv(sp500)
-sp500.count()
-```
-
-
-
+For the table above, the value in the first cell (115.0) represents the maximum ozone reading for Month = 5 (i.e. May).
