@@ -474,5 +474,59 @@ iris %>%
             Avg_Petal_Width = mean(Petal.Width))
 ```
 
+## `*_join()`
 
+`dplyr` also provides verbs for joining data sets. Below, we use the `band_members` and `band_instruments` `tibbles` (which are `data.frame` structures) to illustrate.
+
+```{r}
+# view the data
+band_members
+band_instruments
+```
+
+Suppose that we want to find all rows of `band_members` for which there are matching values in `band_instruments`, and return all columns from the two `tibbles`. We can achieve that using `inner_join`:
+
+```{r}
+# inner join
+band_members %>% inner_join(band_instruments)
+```
+
+We can also use `left_join()` to return all rows of `band_members` and all columns from the two tibbles, with `NA` in the new columns if there are no matches in the rows of `band_members` and `band_instruments`:
+
+```{r}
+# left join
+band_members %>% left_join(band_instruments)
+```
+
+We can use `right_join()` to return all rows of `band_instruments` and all columns from the two `tibbles`, with `NA` in the new columns if there are no matches in the rows of `band_instruments` and `band_members`
+
+```{r}
+# right join
+band_members %>% right_join(band_instruments)
+```
+
+Similarly, we can return all rows and columns of both `band_members` and `band_instruments` with `NA` in the new columns if there are no matches in the rows of `band_instruments` and `band_members`
+
+```{r}
+# full join
+band_members %>% full_join(band_instruments)
+```
+
+Notice that the same join (with different ordering of rows) can be obtained by
+
+```{r}
+# full join
+band_instruments %>% full_join(band_members)
+```
+
+All examples above also work with `data.frames`.
+
+# Useful Links and Resources
+
+* [Datacamp’s tutorial on the `*apply()` family and associated functions](https://www.datacamp.com/tutorial/r-tutorial-apply-family)
+* [MarinStatsLectures in Youtube on the `apply` function](https://www.youtube.com/watch?v=7sJ8r6Lb7-o)
+* [Xianjun Dong’s post on `reshape2` and `tidy2`](https://rpubs.com/sterding/Reshape2_and_Tidyr#:%7E:text=Reshape2%20is%20an%20R%20package,the%20general%20aggregation%20(reshape).)
+* [Overview of the `tidyr` `R` package](https://tidyr.tidyverse.org/)
+* [The chapter on subsetting in *Advanced R*](https://adv-r.hadley.nz/subsetting.html)
+* [`dplyr`’s join pages](https://dplyr.tidyverse.org/reference/mutate-joins.html) for verbs to join `data.frames` and `tibbles`
 

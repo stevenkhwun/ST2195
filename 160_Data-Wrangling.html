@@ -7,7 +7,7 @@
 
         <meta name="author" content="Steven Wun" />
     
-        <meta name="date" content="2023-07-25" />
+        <meta name="date" content="2023-07-26" />
     
     <title>Data Wrangling Operations in R</title>
     <!-- Material Design fonts -->
@@ -194,7 +194,7 @@
 	  	  <div id="header">
 	    <h1 class="title">Data Wrangling Operations in <code>R</code></h1>
 	    	    	    	    <h4 class="author">Steven Wun</h4>
-	    	    	    	    <h4 class="date">2023-07-25</h4>
+	    	    	    	    <h4 class="date">2023-07-26</h4>
 	    	  </div>
 	  	</div>
       </div>
@@ -213,6 +213,7 @@
 <li><a href="#stacking">Stacking</a></li>
 <li><a href="#subsetting">Subsetting</a></li>
 <li><a href="#dplyr-verbs"><code>dplyr</code> Verbs</a></li>
+<li><a href="#useful-links-and-resources">Useful Links and Resources</a></li>
 </ul>
 </div>
 </nav>
@@ -894,6 +895,88 @@
 ## 2 versicolor             5.94            2.77             4.26           1.33 
 ## 3 virginica              6.59            2.97             5.55           2.03</code></pre>
 </div>
+<div id="join" class="section level2">
+<h2><code>*_join()</code></h2>
+<p><code>dplyr</code> also provides verbs for joining data sets. Below, we use the <code>band_members</code> and <code>band_instruments</code> <code>tibbles</code> (which are <code>data.frame</code> structures) to illustrate.</p>
+<div class="sourceCode" id="cb112"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb112-1"><a href="#cb112-1" aria-hidden="true" tabindex="-1"></a><span class="co"># view the data</span></span>
+<span id="cb112-2"><a href="#cb112-2" aria-hidden="true" tabindex="-1"></a>band_members</span></code></pre></div>
+<pre><code>## # A tibble: 3 x 2
+##   name  band   
+##   &lt;chr&gt; &lt;chr&gt;  
+## 1 Mick  Stones 
+## 2 John  Beatles
+## 3 Paul  Beatles</code></pre>
+<div class="sourceCode" id="cb114"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb114-1"><a href="#cb114-1" aria-hidden="true" tabindex="-1"></a>band_instruments</span></code></pre></div>
+<pre><code>## # A tibble: 3 x 2
+##   name  plays 
+##   &lt;chr&gt; &lt;chr&gt; 
+## 1 John  guitar
+## 2 Paul  bass  
+## 3 Keith guitar</code></pre>
+<p>Suppose that we want to find all rows of <code>band_members</code> for which there are matching values in <code>band_instruments</code>, and return all columns from the two <code>tibbles</code>. We can achieve that using <code>inner_join</code>:</p>
+<div class="sourceCode" id="cb116"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb116-1"><a href="#cb116-1" aria-hidden="true" tabindex="-1"></a><span class="co"># inner join</span></span>
+<span id="cb116-2"><a href="#cb116-2" aria-hidden="true" tabindex="-1"></a>band_members <span class="sc">%&gt;%</span> <span class="fu">inner_join</span>(band_instruments)</span></code></pre></div>
+<pre><code>## Joining, by = &quot;name&quot;</code></pre>
+<pre><code>## # A tibble: 2 x 3
+##   name  band    plays 
+##   &lt;chr&gt; &lt;chr&gt;   &lt;chr&gt; 
+## 1 John  Beatles guitar
+## 2 Paul  Beatles bass</code></pre>
+<p>We can also use <code>left_join()</code> to return all rows of <code>band_members</code> and all columns from the two tibbles, with <code>NA</code> in the new columns if there are no matches in the rows of <code>band_members</code> and <code>band_instruments</code>:</p>
+<div class="sourceCode" id="cb119"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb119-1"><a href="#cb119-1" aria-hidden="true" tabindex="-1"></a><span class="co"># left join</span></span>
+<span id="cb119-2"><a href="#cb119-2" aria-hidden="true" tabindex="-1"></a>band_members <span class="sc">%&gt;%</span> <span class="fu">left_join</span>(band_instruments)</span></code></pre></div>
+<pre><code>## Joining, by = &quot;name&quot;</code></pre>
+<pre><code>## # A tibble: 3 x 3
+##   name  band    plays 
+##   &lt;chr&gt; &lt;chr&gt;   &lt;chr&gt; 
+## 1 Mick  Stones  &lt;NA&gt;  
+## 2 John  Beatles guitar
+## 3 Paul  Beatles bass</code></pre>
+<p>We can use <code>right_join()</code> to return all rows of <code>band_instruments</code> and all columns from the two <code>tibbles</code>, with <code>NA</code> in the new columns if there are no matches in the rows of <code>band_instruments</code> and <code>band_members</code></p>
+<div class="sourceCode" id="cb122"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb122-1"><a href="#cb122-1" aria-hidden="true" tabindex="-1"></a><span class="co"># right join</span></span>
+<span id="cb122-2"><a href="#cb122-2" aria-hidden="true" tabindex="-1"></a>band_members <span class="sc">%&gt;%</span> <span class="fu">right_join</span>(band_instruments)</span></code></pre></div>
+<pre><code>## Joining, by = &quot;name&quot;</code></pre>
+<pre><code>## # A tibble: 3 x 3
+##   name  band    plays 
+##   &lt;chr&gt; &lt;chr&gt;   &lt;chr&gt; 
+## 1 John  Beatles guitar
+## 2 Paul  Beatles bass  
+## 3 Keith &lt;NA&gt;    guitar</code></pre>
+<p>Similarly, we can return all rows and columns of both <code>band_members</code> and <code>band_instruments</code> with <code>NA</code> in the new columns if there are no matches in the rows of <code>band_instruments</code> and <code>band_members</code></p>
+<div class="sourceCode" id="cb125"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb125-1"><a href="#cb125-1" aria-hidden="true" tabindex="-1"></a><span class="co"># full join</span></span>
+<span id="cb125-2"><a href="#cb125-2" aria-hidden="true" tabindex="-1"></a>band_members <span class="sc">%&gt;%</span> <span class="fu">full_join</span>(band_instruments)</span></code></pre></div>
+<pre><code>## Joining, by = &quot;name&quot;</code></pre>
+<pre><code>## # A tibble: 4 x 3
+##   name  band    plays 
+##   &lt;chr&gt; &lt;chr&gt;   &lt;chr&gt; 
+## 1 Mick  Stones  &lt;NA&gt;  
+## 2 John  Beatles guitar
+## 3 Paul  Beatles bass  
+## 4 Keith &lt;NA&gt;    guitar</code></pre>
+<p>Notice that the same join (with different ordering of rows) can be obtained by</p>
+<div class="sourceCode" id="cb128"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb128-1"><a href="#cb128-1" aria-hidden="true" tabindex="-1"></a><span class="co"># full join</span></span>
+<span id="cb128-2"><a href="#cb128-2" aria-hidden="true" tabindex="-1"></a>band_instruments <span class="sc">%&gt;%</span> <span class="fu">full_join</span>(band_members)</span></code></pre></div>
+<pre><code>## Joining, by = &quot;name&quot;</code></pre>
+<pre><code>## # A tibble: 4 x 3
+##   name  plays  band   
+##   &lt;chr&gt; &lt;chr&gt;  &lt;chr&gt;  
+## 1 John  guitar Beatles
+## 2 Paul  bass   Beatles
+## 3 Keith guitar &lt;NA&gt;   
+## 4 Mick  &lt;NA&gt;   Stones</code></pre>
+<p>All examples above also work with <code>data.frames</code>.</p>
+</div>
+</div>
+<div id="useful-links-and-resources" class="section level1">
+<h1>Useful Links and Resources</h1>
+<ul>
+<li><a href="https://www.datacamp.com/tutorial/r-tutorial-apply-family">Datacamp’s tutorial on the <code>*apply()</code> family and associated functions</a></li>
+<li><a href="https://www.youtube.com/watch?v=7sJ8r6Lb7-o">MarinStatsLectures in Youtube on the <code>apply</code> function</a></li>
+<li><a href="https://rpubs.com/sterding/Reshape2_and_Tidyr#:%7E:text=Reshape2%20is%20an%20R%20package,the%20general%20aggregation%20(reshape).">Xianjun Dong’s post on <code>reshape2</code> and <code>tidy2</code></a></li>
+<li><a href="https://tidyr.tidyverse.org/">Overview of the <code>tidyr</code> <code>R</code> package</a></li>
+<li><a href="https://adv-r.hadley.nz/subsetting.html">The chapter on subsetting in <em>Advanced R</em></a></li>
+<li><a href="https://dplyr.tidyverse.org/reference/mutate-joins.html"><code>dplyr</code>’s join pages</a> for verbs to join <code>data.frames</code> and <code>tibbles</code></li>
+</ul>
 </div>
 </div>
 
