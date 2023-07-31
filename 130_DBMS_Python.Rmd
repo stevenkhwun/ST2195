@@ -1,0 +1,96 @@
+---
+title: "Data Wrangling Operations in `Python`"
+date: "`r Sys.Date()`"
+author: Steven Wun
+output:
+  rmdformats::material:
+    highlight: kate
+  pdf_document: default
+  word_document: default
+  html_document:
+    number_sections: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Introduction
+
+In order to run `Python` in `R`, we need to load the `reticulate` package first. Further, unless marked as `R code`, all the codes below are Python codes.
+
+```{r warning=FALSE}
+# R code
+# load the required library to run Python in R
+library(reticulate)
+```
+
+# Using Databases With `Python`
+
+We import the module `sqlite3` and use the function `connect()` to create an object, `conn`, to connect to the `SQLite` driver to manipulate the database `University.db`. If the database `University.db` exists in your working directory, the following code chunk will remove it.
+
+
+```{python}
+# this makes sure you can run this notebook multiple times without errors
+import os
+try:
+  os.remove('university.db')
+except OSError:
+  pass
+```
+
+```{python}
+# connect to the SQLite driver
+import sqlite3
+conn = sqlite3.connect('university.db')
+```
+
+## Creating Tables Using `Python`
+
+Now we are going to create some tables to the database `University.db`. Like before, we will create the tables using the data saved in the CSV files. We first load the CSV files into `DataFrame` in Python:
+
+```{python}
+# creating tables using python
+import pandas as pd
+student = pd.read_csv("Course Files/Block 3/student.csv")
+course = pd.read_csv("Course Files/Block 3/course.csv")
+grade = pd.read_csv("Course Files/Block 3/grade.csv")
+```
+
+We then write record stored in `DataFrame`s `student`, `grade` and `course` as tables to the database `University.db` using the `DataFrame` method `to_sql()`.
+
+```{python results='hide'}
+# write tables to the database
+# 'index = False` to ensure the DataFrame row index is not written into the SQL tables
+student.to_sql('Student', con = conn, index = False)
+course.to_sql('Course', con = conn, index = False)
+grade.to_sql('Grade', con = conn, index = False)
+```
+
+## Manipulate Databases Using `Python`
+
+We can manipulate databases in `Python` by the `execute()` and `fetchall()` methods from the `sqlite3` module which performs `SQL` commands. This allows us to leverage the `SQL` commands we have learned to manipulate the databases in `Python`. We first need to create a cursor object `c`:
+
+```{python}
+# create a cursor object 'c'
+c = conn.cursor()
+```
+
+After that we can execute the `SQL` commands we learned before using the function `execute()` and `fetchall()`. For example, if we want to get all the tables in the database, we can run:
+
+```{python}
+# get all the tables in a database
+c.execute('''
+SELECT name
+FROM sqlite_master
+WHERE type='table'
+''')
+```
+
+The result is not returned until we run `fetchall()`:
+
+```{python}
+# return the result
+c.fetchall()
+```
