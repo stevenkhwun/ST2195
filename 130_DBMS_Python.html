@@ -7,7 +7,7 @@
 
         <meta name="author" content="Steven Wun" />
     
-        <meta name="date" content="2023-07-31" />
+        <meta name="date" content="2023-08-01" />
     
     <title>Data Wrangling Operations in Python</title>
     <!-- Material Design fonts -->
@@ -194,7 +194,7 @@
 	  	  <div id="header">
 	    <h1 class="title">Data Wrangling Operations in <code>Python</code></h1>
 	    	    	    	    <h4 class="author">Steven Wun</h4>
-	    	    	    	    <h4 class="date">2023-07-31</h4>
+	    	    	    	    <h4 class="date">2023-08-01</h4>
 	    	  </div>
 	  	</div>
       </div>
@@ -266,11 +266,79 @@
 <span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="st">FROM sqlite_master</span></span>
 <span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="st">WHERE type=&#39;table&#39;</span></span>
 <span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="st">&#39;&#39;&#39;</span>)</span></code></pre></div>
-<pre><code>## &lt;sqlite3.Cursor object at 0x000000004E07E260&gt;</code></pre>
+<pre><code>## &lt;sqlite3.Cursor object at 0x000000004E0CE260&gt;</code></pre>
 <p>The result is not returned until we run <code>fetchall()</code>:</p>
 <div class="sourceCode" id="cb11"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># return the result</span></span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>c.fetchall()</span></code></pre></div>
 <pre><code>## [(&#39;Student&#39;,), (&#39;Course&#39;,), (&#39;Grade&#39;,)]</code></pre>
+<p>We can see there are three tables in the database. If we want to browse the table <code>Student</code> we can run (here we display the results as <code>pandas</code> <code>DataFrame</code>):</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># browse the contents of a table</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>q <span class="op">=</span> c.execute(<span class="st">&quot;SELECT * FROM Student&quot;</span>).fetchall()</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>pd.DataFrame(q)</span></code></pre></div>
+<pre><code>##            0               1  2
+## 0  201921323       Ava Smith  2
+## 1  201832220     Ben Johnson  3
+## 2  202003219   Charlie Jones  1
+## 3  202045234      Dan Norris  1
+## 4  201985603      Emily Wood  1
+## 5  201933222  Freddie Harris  2
+## 6  201875940    Grace Clarke  2</code></pre>
+<p>Note here we combine the use of <code>execute()</code> and <code>fetchall()</code> in one line.</p>
+<div id="add-a-new-table" class="section level3">
+<h3>Add a New Table</h3>
+<p>We can add a new table by running the SQL command through <code>execute()</code>:</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># add a new table</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>c.execute(<span class="st">&#39;&#39;&#39;</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="st">CREATE TABLE Teacher (staff_id TEXT PRIMARY KEY, name TEXT)</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="st">&#39;&#39;&#39;</span>)</span></code></pre></div>
+<pre><code>## &lt;sqlite3.Cursor object at 0x000000004E0CE260&gt;</code></pre>
+<div class="sourceCode" id="cb17"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>conn.commit()     <span class="co"># save (commit) the changes</span></span></code></pre></div>
+<p>When we list the tables, we can see four tables.</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># list the tables</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>c.execute(<span class="st">&#39;&#39;&#39;</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="st">SELECT name</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="st">FROM sqlite_master</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="st">WHERE type=&#39;table&#39;</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="st">&#39;&#39;&#39;</span>).fetchall()</span></code></pre></div>
+<pre><code>## [(&#39;Student&#39;,), (&#39;Course&#39;,), (&#39;Grade&#39;,), (&#39;Teacher&#39;,)]</code></pre>
+</div>
+<div id="delete-a-table" class="section level3">
+<h3>Delete a Table</h3>
+<p>We can delete a table by running the <code>SQL</code> command through <code>execute()</code>:</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># delete a table</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>c.execute(<span class="st">&quot;DROP TABLE Teacher&quot;</span>)</span></code></pre></div>
+<pre><code>## &lt;sqlite3.Cursor object at 0x000000004E0CE260&gt;</code></pre>
+<div class="sourceCode" id="cb22"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>conn.commit()</span></code></pre></div>
+<p>When we list the tables, we can see three tables.</p>
+<div class="sourceCode" id="cb23"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># list the tables</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>c.execute(<span class="st">&#39;&#39;&#39;</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="st">SELECT name</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="st">FROM sqlite_master</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a><span class="st">WHERE type=&#39;table&#39;</span></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a><span class="st">&#39;&#39;&#39;</span>).fetchall()</span></code></pre></div>
+<pre><code>## [(&#39;Student&#39;,), (&#39;Course&#39;,), (&#39;Grade&#39;,)]</code></pre>
+</div>
+<div id="insert-tuplesrows" class="section level3">
+<h3>Insert Tuples/Rows</h3>
+<p>Insert the year 1 student Harper Taylor with student ID 202029744 to Student:</p>
+<div class="sourceCode" id="cb25"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co"># insert rows</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>c.execute(<span class="st">&quot;INSERT INTO Student VALUES(202029744, &#39;Harper Taylor&#39;, 1)&quot;</span>)</span></code></pre></div>
+<pre><code>## &lt;sqlite3.Cursor object at 0x000000004E0CE260&gt;</code></pre>
+<div class="sourceCode" id="cb27"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>conn.commit()</span></code></pre></div>
+<p>When we browse the table, we can see the new row is added.</p>
+<div class="sourceCode" id="cb28"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co"># browse the table</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>q <span class="op">=</span> c.execute(<span class="st">&quot;SELECT * FROM Student&quot;</span>).fetchall()</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>pd.DataFrame(q)</span></code></pre></div>
+<pre><code>##            0               1  2
+## 0  201921323       Ava Smith  2
+## 1  201832220     Ben Johnson  3
+## 2  202003219   Charlie Jones  1
+## 3  202045234      Dan Norris  1
+## 4  201985603      Emily Wood  1
+## 5  201933222  Freddie Harris  2
+## 6  201875940    Grace Clarke  2
+## 7  202029744   Harper Taylor  1</code></pre>
+</div>
 </div>
 </div>
 </div>

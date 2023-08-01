@@ -94,3 +94,75 @@ The result is not returned until we run `fetchall()`:
 # return the result
 c.fetchall()
 ```
+
+We can see there are three tables in the database. If we want to browse the table `Student` we can run (here we display the results as `pandas` `DataFrame`):
+
+```{python}
+# browse the contents of a table
+q = c.execute("SELECT * FROM Student").fetchall()
+pd.DataFrame(q)
+```
+
+Note here we combine the use of `execute()` and `fetchall()` in one line.
+
+### Add a New Table
+
+We can add a new table by running the SQL command through `execute()`:
+
+```{python}
+# add a new table
+c.execute('''
+CREATE TABLE Teacher (staff_id TEXT PRIMARY KEY, name TEXT)
+''')
+conn.commit()     # save (commit) the changes
+```
+
+When we list the tables, we can see four tables.
+
+```{python}
+# list the tables
+c.execute('''
+SELECT name
+FROM sqlite_master
+WHERE type='table'
+''').fetchall()
+```
+
+### Delete a Table
+
+We can delete a table by running the `SQL` command through `execute()`:
+
+```{python}
+# delete a table
+c.execute("DROP TABLE Teacher")
+conn.commit()
+```
+
+When we list the tables, we can see three tables.
+
+```{python}
+# list the tables
+c.execute('''
+SELECT name
+FROM sqlite_master
+WHERE type='table'
+''').fetchall()
+```
+
+### Insert Tuples/Rows
+
+Insert the year 1 student Harper Taylor with student ID 202029744 to Student:
+
+```{python}
+# insert rows
+c.execute("INSERT INTO Student VALUES(202029744, 'Harper Taylor', 1)")
+conn.commit()
+```
+
+When we browse the table, we can see the new row is added.
+
+```{python}
+# browse the table
+q = c.execute("SELECT * FROM Student").fetchall()
+pd.DataFrame(q)
+```
