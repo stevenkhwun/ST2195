@@ -166,3 +166,79 @@ When we browse the table, we can see the new row is added.
 q = c.execute("SELECT * FROM Student").fetchall()
 pd.DataFrame(q)
 ```
+
+### Update Tuples/Rows
+
+Update the student ID of student Harper Taylor to 201929744:
+
+```{python}
+# update rows
+c.execute('''
+UPDATE Student
+SET student_id = "201929744"
+WHERE name = "Harper Taylor"
+''')
+conn.commit()
+```
+
+When we browse the table, we can see the row has changed.
+
+```{python}
+# browse the table
+q = c.execute("SELECT * FROM Student").fetchall()
+pd.DataFrame(q)
+```
+
+### Delete Tuples/Rows
+
+Delete the record for the student Harper Taylor from table `Student`:
+
+```{python}
+# delete rows
+c.execute('''
+DELETE FROM Student
+WHERE name = "Harper Taylor"
+''')
+conn.commit()
+```
+
+When we browse the table, we can see the row has been removed.
+
+```{python}
+# browse the table
+q = c.execute("SELECT * FROM Student").fetchall()
+pd.DataFrame(q)
+```
+
+## Disconnecting From the Database
+
+After we finish manipulating the database, we can close the connection using the method `close()` on `conn`:
+
+```{python}
+# disconnect form the database
+conn.close()
+```
+
+# Querying Databases in `Python`
+
+## Using Databases With `Python`
+
+We will use `Python` to query databases using the database `university.db` that we have created in previous section.
+
+## Connecting to Databases Using `Python`
+
+We first connect to the database `university.db` and list all the tables. We should see all the three tables `Student`, `Course`, and `Grade` that we have created in previous section.
+
+```{python}
+# connecting to the database
+# note that library 'sqlite3' is required
+conn = sqlite3.connect('university.db')
+c = conn.cursor()
+```
+
+List all the tables in `university.db`:
+
+```{python}
+# list all the tables in the database
+c.execute("SELECT name FROM sqlite_master WHERE type = 'table'").fetchall()
+```
